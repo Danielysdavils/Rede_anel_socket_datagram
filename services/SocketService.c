@@ -9,17 +9,18 @@
 
 #include "SocketService.h"
 
+#define TAM_BUFFER 1024
 
 static int server_fd = -1;
 static int connected_socket = -1;
+
 
 struct Response CreatingServer(struct Network *network) {
     struct Response response;
 
     if(server_fd >= 0){
         // mostra erro porém não fecha server
-        response.Message = "[Error]: an existent server found";
-        response.State = false;
+        ResponseError(&response, "[Error]: an existent server found");
         return response;
     }
 
@@ -27,12 +28,14 @@ struct Response CreatingServer(struct Network *network) {
     int opt = 1;
 
     if ((server_fd = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK, 0)) < 0) {
-        ErrorAndClose(&response, "[Socket]: Error creating");
+        ResponseError(&response, "[Socket]: Error creating");
+        StopServer();
         return response;
     }
 
     if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))){
-        ErrorAndClose(&response, "[Socket]: Error set socket opt");
+        ResponseError(&response, "[Socket]: Error set socket opt");
+        StopServer();
         return response;
     }
 
@@ -41,7 +44,8 @@ struct Response CreatingServer(struct Network *network) {
     address.sin_port = htons(network->Port);
 
     if(bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0){
-        ErrorAndClose(&response, "[Socket]: Error bind");
+        ResponseError(&response, "[Socket]: Error bind");
+        StopServer();
         return response;
     }
 
@@ -63,8 +67,7 @@ struct Response SendMessage(struct Message *message) {
     destination.sin_port = htons(destination_port);
 
     if(inet_pton(AF_INET, destination_ip, &destination.sin_addr) != 1){
-        response.Message = "[ERROR]: Failed in convert ip";
-        response.State = false;
+        ResponseError(&response, "[ERROR]: Failed in convert ip");
         return response;
     }
 
@@ -80,13 +83,49 @@ struct Response SendMessage(struct Message *message) {
 
     if(sent < 0){
         if(errno == EAGAIN || errno == EWOULDBLOCK){
-            
+            ResponseErrorCode(&response, "[ERRO]: Socket temp indisponivel", CODE_UNAVAILABLE);
+            return response;
         }
+
+        ResponseError(&response, "[ERRO]: In try to send");
+        return response;
     }
+
+    ResponseAccert(&response, "[SOCKET]: Message sended!");
+    return response;
 }
 
-struct Message *ReceiveMessage() {
+struct Response ReceiveMessage() {
+    struct Response response;
+    char buffer[TAM_BUFFER];
 
+    struct sockaddr_in sender = {0};
+    socklen_t senderLenght = size_of(sender);
+
+    ssize_t received = recvfrom(
+        connected_socket,
+        buffer,
+        sizeof(buffer),
+        0,
+        (struct sockaddr *)&sender,
+        &senderLenght
+    );
+
+    if(received < 0){
+        if(errno == EAGAIN || errno == EWOULDBLOCK){
+            // nao ha dados disponíveis
+            ResponseAccertData(&response, NULL, CODE_ANY_DATA);
+            return response;
+        }
+
+        ResponseErrorData(&response, "[ERRO]: Erro no recvfrom", CODE_GENERAL_ERROR);
+        return response;
+    }
+
+    struct Message *data = DecodeMessage(received);
+
+    ResponseAccertData(&response, data, CODE_GENERAL_ACCERT);
+    return response;    
 }
 
 void StopConnection() {
@@ -102,11 +141,4 @@ void StopAllSocketConnection() {
     StopServer();
 }
 
-// para cada erro crítico mostra mensagem e fecha conexão
-void ErrorAndClose(struct Response *response, char *msm) {
-    response->Message = msm;
-    response->State = false;
-
-    StopAllSocketConnection();
-}
 

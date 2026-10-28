@@ -37,7 +37,7 @@
 #define A 0
 #define B 1
 #define C 2
-#define D 4
+#define D 3
 
 // para histórico local de transferencias recebidas
 #define MAX_TRANSFERS 32
@@ -46,5 +46,12 @@
 
 // tamanho máximo para criação de ids 
 #define TAM_LIMIT_ID 50
+
+// ** alguns codigos de status especificos
+// define int para não ter que tratar conversão de ENUM -> INT
+#define CODE_UNAVAILABLE 1 // socket temp indisponível
+#define CODE_GENERAL_ERROR 2
+#define CODE_GENERAL_ACCERT 3
+#define CODE_ANY_DATA 4
 
 #endif

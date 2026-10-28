@@ -1,6 +1,8 @@
 #ifndef __MESSAGE__
 #define __MESSAGE__
 
+#include <stdio.h>
+
 #include "../../game/Data.h"
 #include "../../../config/gameDefs.h"
 #include "../../../config/networkDefs.h"
@@ -47,5 +49,7 @@ struct Message {
     // dados
     struct Data *Data;
 };
+
+struct Message *DecodeMessage (ssize_t data);
 
 #endif
