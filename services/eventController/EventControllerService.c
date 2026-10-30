@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "EventControllerService.h"
 #include "../socket/SocketService.h"
@@ -18,7 +19,27 @@ struct EventController *CreateEventController() {
 }
 
 void AskRoundData (struct EventController *ctr){
+    if(ctr->IsWaitingInput) return;
 
+    ctr->IsWaitingInput = true;
+
+    printf("[RUN] Quantas jogadas deseja realizar?");
+    fflush(stdout);
+}
+
+void HandleUserInput(struct EventController *ctr){
+    char buffer[BUFFER_USER_INPUT];
+
+    if(!fgets(buffer, sizeof(buffer), stdin)) return;
+
+    char *end;
+    long rounds = strtol(buffer, &end, 10);
+
+    if(end == buffer || rounds <= 0 || rounds > MAX_ROUNDS_PER_USER) {
+        printf("[RUN_ERRO] Entrada inválida. Número máx possível: %d", MAX_ROUNDS_PER_USER);
+        fflush(stdout);
+        return;
+    }
 }
 
 bool RunEventController (struct Endpoint *endpoint) {
@@ -44,6 +65,7 @@ bool RunEventController (struct Endpoint *endpoint) {
 
     if(endpoint->IsServer){
         printf("[RUN] Parabéns! você será server nessa jogada!");
+        AskRoundData(ctr);
     }else 
         printf("[RUN] Parabéns! você será player nessa jogada!");
 
@@ -81,7 +103,10 @@ bool RunEventController (struct Endpoint *endpoint) {
             }
         }
 
-        // [Controll]: Espera resposta usuário
+        // [Controll]: Usuário digita resposta
+        if(ctr->IsWaitingInput && fds[1].revents & POLLIN){
+            HandleUserInput(ctr);
+        }
     }
 }
 

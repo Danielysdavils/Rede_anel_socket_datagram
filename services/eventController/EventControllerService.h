@@ -3,7 +3,10 @@
 
 #include <stdbool.h>
 #include "../../entities/network/endpoint/Endpoint.h";
+#include "../../config/gameDefs.h"
 #include "../../entities/game/Data.h"
+
+#define BUFFER_USER_INPUT 64
 
 struct EventController {
     // num máx de jogadas para servidor ativo
