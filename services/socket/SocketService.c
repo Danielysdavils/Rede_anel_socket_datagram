@@ -7,13 +7,12 @@
 #include <errno.h>
 #include <arpa/inet.h>
 
-#include "SocketService.h"
+#include "./SocketService.h"
 
 #define TAM_BUFFER 1024
 
 static int server_fd = -1;
 static int connected_socket = -1;
-
 
 struct Response CreatingServer(struct Network *network) {
     struct Response response;
@@ -51,6 +50,7 @@ struct Response CreatingServer(struct Network *network) {
 
     response.Message = "[Socket]: Server created successfully!";
     response.State = true;
+    response.Data = connected_socket;
 
     return response;
 }

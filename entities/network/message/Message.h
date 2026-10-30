@@ -50,6 +50,6 @@ struct Message {
     struct Data *Data;
 };
 
-struct Message *DecodeMessage (ssize_t data);
+struct Message *DecodeMessage (size_t data);
 
 #endif

@@ -1,8 +1,10 @@
-#ifndef __ENDPOINT__
-#define __ENDPOINT__
+#ifndef ENDPOINT_H
+#define ENDPOINT_H
 
 #include <stdbool.h>
 #include "../../../config/networkDefs.h"
+#include "../network/Network.h"
+#include "../../utils/Response.h"
 
 struct Endpoint
 {
@@ -22,7 +24,9 @@ struct Endpoint
     struct Storage *Storage;
 };
 
-struct Endpoint* CreateEndpoint (struct Network *net, int id, bool isServer, struct Storage storage);
+struct Response PrepareEndpoint();
+
+struct Endpoint* CreateEndpoint (struct Network *net, int id, bool isServer, struct Storage *storage);
 
 void DestroyEndpoint (struct Endpoint *endpoint);
 

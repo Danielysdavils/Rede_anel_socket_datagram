@@ -19,7 +19,7 @@ void ResponseAccert(struct Response *response, char *msm) {
     response->Code = CODE_GENERAL_ACCERT;
 }
 
-void ResponseAccertData(struct Response *response, struct Message *data, int code) {
+void ResponseAccertData(struct Response *response, void *data, int code) {
     response->State = true;
     response->Code = CODE_GENERAL_ACCERT;
     response->Data = data;
