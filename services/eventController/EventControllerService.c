@@ -6,6 +6,8 @@
 
 #include "EventControllerService.h"
 #include "../socket/SocketService.h"
+#include "../../entities/utils/Input.h"
+
 
 struct EventController *CreateEventController() {
     struct EventController * ev = malloc(sizeof(struct EventController));
@@ -16,30 +18,9 @@ struct EventController *CreateEventController() {
 
     ev->CurrentEvent = INIT;
     ev->MaxRounds = 0;
-}
+    ev->IsWaitingInput = false;
 
-void AskRoundData (struct EventController *ctr){
-    if(ctr->IsWaitingInput) return;
-
-    ctr->IsWaitingInput = true;
-
-    printf("[RUN] Quantas jogadas deseja realizar?");
-    fflush(stdout);
-}
-
-void HandleUserInput(struct EventController *ctr){
-    char buffer[BUFFER_USER_INPUT];
-
-    if(!fgets(buffer, sizeof(buffer), stdin)) return;
-
-    char *end;
-    long rounds = strtol(buffer, &end, 10);
-
-    if(end == buffer || rounds <= 0 || rounds > MAX_ROUNDS_PER_USER) {
-        printf("[RUN_ERRO] Entrada inválida. Número máx possível: %d", MAX_ROUNDS_PER_USER);
-        fflush(stdout);
-        return;
-    }
+    return ev;
 }
 
 bool RunEventController (struct Endpoint *endpoint) {
@@ -63,13 +44,23 @@ bool RunEventController (struct Endpoint *endpoint) {
     struct EventController *ctr = CreateEventController();
     if(!ctr) return false;
 
+    // configuro input
+    ConfigureInput();
+    
     if(endpoint->IsServer){
         printf("[RUN] Parabéns! você será server nessa jogada!");
-        AskRoundData(ctr);
+        // pergunta só uma vez antes de iniciar o poll para começar de fato a jogada
+        // depois pergunta novamente só se tiver transferencia de player->servidor
+        AskUserInput("[Entry] Quantas rodadas deseja realizar?", &ctr->IsWaitingInput, SERVER_ASK_ROUNDS, MAX_ROUNDS_PER_USER);
+    
     }else 
         printf("[RUN] Parabéns! você será player nessa jogada!");
 
+    bool endWithoutErro = true;
     while (1) {
+        // para que ignore terminal quando nao há pergunta do usuário
+        fds[1].fd = ctr->IsWaitingInput ? STDIN_FILENO : -1;
+
         int result = poll(fds, 2, 1000);
 
         if(result < 0){
@@ -77,6 +68,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                 continue;
             
             printf("[RUN_ERRO] Poll error");
+            endWithoutErro = false;
             break;
         }
 
@@ -100,15 +92,62 @@ bool RunEventController (struct Endpoint *endpoint) {
                 //   sou dono e teve transição de server? 
                 //   nao sou dono teve transição de server?
                 // altero dados locais conforme msm (matriz do storage, etc) 
+
+                // conforme mensagem recebida pergunta ao usuário
+                // precisa mandar o evento da pergunta
+                // para que ao chegar ao [controll] saiba que evento executar
             }
         }
 
         // [Controll]: Usuário digita resposta
         if(ctr->IsWaitingInput && fds[1].revents & POLLIN){
-            HandleUserInput(ctr);
+            // aqui chegam todas as entradas do usuário
+            // importante distruibuir respostas e executar ações conforme resposta
+            struct InputResponse response = HandleUserInput(&ctr->IsWaitingInput);
+            if(response.data < 0) {
+                printf("[RUN_ERRO] Erro ao ler entrada do usuário");
+                // adicionar uma outra tentativa ? da mesma pergunta ? 
+                endWithoutErro = false;
+                break;
+
+            }else if (response.data > 0){
+                switch (response.event) {
+                    case SERVER_ASK_ROUNDS:
+                        ctr->MaxRounds = response.data;
+                        // cria mensagem 
+                        // manda bastão
+                        break;
+                    
+                    case SERVER_FINISH_ROUND:
+                        // manda evento fim
+                        // 
+                        break;
+                    
+                    // (*) MARIA: COLOCAR AQUI DO JOGADOR DEPENDENDO DO EVENTO
+                    case PLAYER_ASK_BET_TYPE:
+                        // tipo da aposta
+                        // 
+                        break;
+
+                    case PLAYER_ASK_BET_VALUE:
+                        // valor da aposta
+                        //
+                        break;
+
+                    case PLAYER_ASK_WANNA_PLAY:
+                        // se quer se juntar a essa rodada
+                        break;
+
+                    default:
+                        break;
+                }
+            }
         }
     }
+
+    return endWithoutErro;
 }
+
 
 
 void StopEventController (struct Endpoint *endpoint) {

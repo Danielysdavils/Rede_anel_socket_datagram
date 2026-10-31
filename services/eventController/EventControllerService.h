@@ -6,8 +6,6 @@
 #include "../../config/gameDefs.h"
 #include "../../entities/game/Data.h"
 
-#define BUFFER_USER_INPUT 64
-
 struct EventController {
     // num máx de jogadas para servidor ativo
     int MaxRounds;
@@ -16,6 +14,7 @@ struct EventController {
     // flag para saber se aguarda entrada do usuário
     bool IsWaitingInput;
 };
+
 
 // por enquanto só bool. 
 // conferir depois se vale a pena mudar para response
