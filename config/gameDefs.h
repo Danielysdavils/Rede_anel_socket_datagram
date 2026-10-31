@@ -20,8 +20,6 @@ enum ControlInputEvents {
     SERVER_ASK_ROUNDS,
 
     // [PLAYER_EVENTS]
-    // se o player quer apostar nessa jogada
-    PLAYER_ASK_WANNA_PLAY,
     // qual o valor da aposta
     PLAYER_ASK_BET_VALUE,
     // qual o tipo da aposta

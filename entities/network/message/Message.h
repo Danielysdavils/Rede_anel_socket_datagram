@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#include "../../game/Data.h"
+#include "../../game/data/Data.h"
 #include "../../../config/gameDefs.h"
 #include "../../../config/networkDefs.h"
 
@@ -25,7 +25,7 @@ struct Message {
     // Identificador único do bastão
     // servidor é o único que pode gerar Ids
     // Id é fixo para cada evento da jogada, o q permite identificar retransmissões
-    char Id[TAM_LIMIT_ID];
+    char *Id;
     // contador de retransmissões de um bastão
     int Retry;
     // tipo da mensagem: bastão, ack
@@ -51,5 +51,9 @@ struct Message {
 };
 
 struct Message *DecodeMessage (size_t data);
+
+struct Response *CreateMessage (int currentRodada, struct Endpoint *endpoint, enum MessageType type, struct Data *data);
+
+void DestroiMessage (struct Message *message);
 
 #endif

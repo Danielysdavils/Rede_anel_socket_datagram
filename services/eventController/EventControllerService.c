@@ -7,7 +7,9 @@
 #include "EventControllerService.h"
 #include "../socket/SocketService.h"
 #include "../../entities/utils/Input.h"
-
+#include "../../entities/game/player/Player.h"
+#include "../../entities/network/message/Message.h"
+#include "../../entities/game/server/Server.h"
 
 struct EventController *CreateEventController() {
     struct EventController * ev = malloc(sizeof(struct EventController));
@@ -19,6 +21,7 @@ struct EventController *CreateEventController() {
     ev->CurrentEvent = INIT;
     ev->MaxRounds = 0;
     ev->IsWaitingInput = false;
+    ev->currentRound = 1;
 
     return ev;
 }
@@ -56,7 +59,12 @@ bool RunEventController (struct Endpoint *endpoint) {
     }else 
         printf("[RUN] Parabéns! você será player nessa jogada!");
 
+    // inicializo os dois, porém os preencho na hora de receber uma mensagem.
+    struct Player *player = NULL;
+    struct PlayerServer *server = NULL;
+
     bool endWithoutErro = true;
+
     while (1) {
         // para que ignore terminal quando nao há pergunta do usuário
         fds[1].fd = ctr->IsWaitingInput ? STDIN_FILENO : -1;
@@ -75,6 +83,8 @@ bool RunEventController (struct Endpoint *endpoint) {
         // [EV]: Mensagem recebida
         if(fds[0].revents & POLLIN){
             while (1) {
+                // aqui já cria uma nova mensagem
+                // com dados de destino e origem correspondente a essa maquina
                 re = ReceiveMessage();
                 
                 if(re.State && re.Code == CODE_ANY_DATA){
@@ -96,6 +106,98 @@ bool RunEventController (struct Endpoint *endpoint) {
                 // conforme mensagem recebida pergunta ao usuário
                 // precisa mandar o evento da pergunta
                 // para que ao chegar ao [controll] saiba que evento executar
+                struct Message *message = (struct Message *)re.Data;
+                
+                if(message->Type == DATA){
+                    // verifico se sou o dono
+                    // se sou dono então sou server
+                    if(message->OwnerId == endpoint->Id){
+                        // sou server, cria uma vez no começo
+                        if(!server) server = CreatePlayerServer(endpoint->Id);
+                    
+                        // gero as respostas do servidor
+                        struct Data *data = GenerateServerData(message->Data, server);
+                        
+                        // crio novo bastão, com novos evs, etc
+                        ctr->currentRound++;
+                        ctr->CurrentEvent = GetNextEvent(message->Data->Event);
+                        
+                        // atualizo a nova data com o novo evento próximo
+                        data->Event = ctr->CurrentEvent;
+                        data->Round = ctr->currentRound;
+
+                        message->Id = GenerateId(ctr->currentRound, endpoint->Id);
+                        message->Data = data;
+
+                        // marco o controll
+
+                        // envio
+                        re = SendMessage(message);
+                        if(!re.State){
+                            // mensagem não pode ser enviada
+                            // fazer uma outra tentativa
+                        }
+
+                        printf("[RUN] Message enviada: %s", message->Id);
+                        
+                        DestroiData(data);
+                        // lembrar destruir de novo no EVENT Fin
+                    
+                    }else{
+                        // nao sou dono da mensagem
+
+                        // preciso ser o novo dono? ou seja, passar a ser servidor?
+                        // preciso ser o novo dono se 
+                        //   - antes era jogador 
+                        //   - dono da mensagem sou eu
+                        //   - evento da mensagem [INIT]
+                        if(!endpoint->IsServer && message->OwnerId == endpoint->Id){
+                            // como preciso ser o novo dono, destruo player existente
+                            // crio server
+                            endpoint->IsServer = true;
+
+                            if(player){
+                                DestroiPlayer(player);
+                                player = NULL;
+                            }
+
+                            if(!server) server = CreatePlayerServer(endpoint->Id);
+
+                            ctr->CurrentEvent = INIT;
+                            ctr->currentRound = 1;
+                            
+                            AskUserInput("[Entry] Quantas rodadas deseja realizar?", &ctr->IsWaitingInput, SERVER_ASK_ROUNDS, MAX_ROUNDS_PER_USER);
+                            // manda mensagem no controle de respostas
+
+                        }else {
+                            // não preciso ser o novo dono, sou player, continuo player
+                            if(!player) player = CreatePlayer(endpoint->Id);
+
+                            // sou player, desestruturo msm
+                            // importante, atualizo dados locais
+                            ctr->CurrentEvent = message->Data->Event;
+                            ctr->currentRound = message->Data->Round;
+
+                            // peço dados
+                            struct data *data = GeneratePlayerData(message->Data, player, ctr->CurrentEvent, endpoint->IsServer);
+                        
+                            // o unico que muda são dados e control
+                            // envio bastão
+                            SendMessage(message);
+
+                            DestroiData(data);
+                        }
+                    }
+
+                    continue;
+                }
+
+                if(message->Type == ACK){
+                    continue;
+                }
+
+                // destruo a mensage
+                DestroiMessage(message);
             }
         }
 
@@ -126,16 +228,14 @@ bool RunEventController (struct Endpoint *endpoint) {
                     // (*) MARIA: COLOCAR AQUI DO JOGADOR DEPENDENDO DO EVENTO
                     case PLAYER_ASK_BET_TYPE:
                         // tipo da aposta
-                        // 
+                        player->Bet.type = response.data;
                         break;
 
                     case PLAYER_ASK_BET_VALUE:
                         // valor da aposta
-                        //
-                        break;
-
-                    case PLAYER_ASK_WANNA_PLAY:
-                        // se quer se juntar a essa rodada
+                        player->Bet.value = response.data;
+                        // gera mensagem
+                        // manda bastão 
                         break;
 
                     default:

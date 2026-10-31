@@ -4,11 +4,13 @@
 #include <stdbool.h>
 #include "../../entities/network/endpoint/Endpoint.h";
 #include "../../config/gameDefs.h"
-#include "../../entities/game/Data.h"
+#include "../../entities/game/data/Data.h"
 
 struct EventController {
     // num máx de jogadas para servidor ativo
     int MaxRounds;
+    // rodada atual
+    int currentRound;
     // evento atual ativo
     enum Event CurrentEvent;
     // flag para saber se aguarda entrada do usuário
