@@ -179,7 +179,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                             ctr->currentRound = message->Data->Round;
 
                             // peço dados
-                            struct data *data = GeneratePlayerData(message->Data, player, ctr->CurrentEvent, endpoint->IsServer);
+                            struct data *data = GeneratePlayerData(message->Data, player);
                         
                             // o unico que muda são dados e control
                             // envio bastão
