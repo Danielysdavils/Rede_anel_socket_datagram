@@ -4,13 +4,18 @@
 #include "../data/Data.h"
 
 struct PlayerServer{
-    int serverId; // mesmo do endpoint
+    int ServerId; // mesmo do endpoint
+    
+    // contador de rodadas locais
+    int LocalRound; // inicializar em 1 SEMPRE
 };
 
 struct PlayerServer *CreatePlayerServer (int serverID);
 
 // importante que o valor retornado seja nova struct, não reutilizar do parametro
 struct Data *GenerateServerData (struct Data *data, struct PlayerServer *server); 
+
+bool UpdateServerData (struct Data *data, struct PlayerServer *server);
 
 void DestroiServer (struct PlayerServer *server);
 

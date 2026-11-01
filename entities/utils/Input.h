@@ -31,6 +31,8 @@ struct InputResponse {
 // configura entrada não bloquante
 int ConfigureInput(void);
 
+int RestoreInput(void);
+
 // quando poll deteta resposta do usuario chama essa função
 // para desestruturar string e retornar dado
 struct InputResponse HandleUserInput(bool *control);

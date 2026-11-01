@@ -10,6 +10,9 @@
 #include "../../entities/game/player/Player.h"
 #include "../../entities/network/message/Message.h"
 #include "../../entities/game/server/Server.h"
+#include "../../entities/game/data/Data.h";
+#include "../../entities/network/transfer/Transfer.h"
+
 
 struct EventController *CreateEventController() {
     struct EventController * ev = malloc(sizeof(struct EventController));
@@ -25,6 +28,9 @@ struct EventController *CreateEventController() {
 
     return ev;
 }
+
+
+static struct Message *_temporaryMessage = NULL;
 
 bool RunEventController (struct Endpoint *endpoint) {
     // primeiro verificar se é servidor ou não
@@ -45,10 +51,21 @@ bool RunEventController (struct Endpoint *endpoint) {
     };
     
     struct EventController *ctr = CreateEventController();
-    if(!ctr) return false;
+    if(!ctr){
+        StopAllSocketConnection();
+        return false;
+    }
 
     // configuro input
-    ConfigureInput();
+    int result = ConfigureInput();
+    if(result < 0){
+        printf("[RUN_ERRO]: Não foi possível configurar entradas do usuário");
+        
+        StopAllSocketConnection();
+        DestroiEventController(ctr);
+
+        return false;
+    }
     
     if(endpoint->IsServer){
         printf("[RUN] Parabéns! você será server nessa jogada!");
@@ -108,96 +125,213 @@ bool RunEventController (struct Endpoint *endpoint) {
                 // para que ao chegar ao [controll] saiba que evento executar
                 struct Message *message = (struct Message *)re.Data;
                 
-                if(message->Type == DATA){
-                    // verifico se sou o dono
-                    // se sou dono então sou server
-                    if(message->OwnerId == endpoint->Id){
+                // bastão e é para mim
+                if(message->Type == DATA && message->Destination.EndpointID == endpoint->Id){
+                    // sou o dono e se sou server
+                    if(message->OwnerId == endpoint->Id && endpoint->IsServer){
                         // sou server, cria uma vez no começo
                         if(!server) server = CreatePlayerServer(endpoint->Id);
-                    
+
                         // gero as respostas do servidor
+                        // aqui não preciso fazer tratamento de evento porque em todas servidor gera dado
+                        // o tratamento é interno na função
                         struct Data *data = GenerateServerData(message->Data, server);
                         
-                        // crio novo bastão, com novos evs, etc
-                        ctr->currentRound++;
-                        ctr->CurrentEvent = GetNextEvent(message->Data->Event);
-                        
+                        char *newMessageId = message->Id;
+                        int messageOwner = message->OwnerId;
+
+                        // Quer dizer que terminou rodada e ainda não cumpli o limite de rodadas do servidor
+                        if(message->Data->Event == END && server->LocalRound < ctr->MaxRounds){
+                            // crio uma nova mensagem com:
+                            //  - novo id, pois é novo inicio de rodada
+                            //  - mesmo owner, pois ainda to no limite de rodadas desse servidor
+                            //  - incremento localRound
+                                
+                            ctr->currentRound++;
+                            ctr->CurrentEvent = INIT;
+
+                            // crio o id apontando para esse mesmo endpoint
+                            newMessageId = GenerateId(ctr->currentRound, endpoint->Id);
+                            server->LocalRound++;
+                        }
+                        // terminou a rodada e terminei minhas rodadas máximas do servidor
+                        else if(message->Data->Event == END && server->LocalRound == ctr->MaxRounds){
+                            // crio nova mensagem com:
+                            //  - novo id, pois é novo inicio de rodada
+                            //  - novo owner, pois há transferencia de servidor
+                            //  - aumento currentRound para gerar message ao prox dono já atualizado
+                            // também:
+                            //  - destruo servidor atual
+                            //  como não uso mais maxRounds posso deixar assim ou zera
+                            ctr->currentRound++;
+                            ctr->CurrentEvent = INIT;
+
+                            newMessageId = GenerateId(ctr->currentRound, endpoint->Next_endpoint_id);
+                            messageOwner = endpoint->Next_endpoint_id;
+
+                            // Como deixo de ser servidor
+                            if(server){
+                                DestroiServer(server);
+                                server = NULL;
+                            }
+
+                            endpoint->IsServer = false;
+                        } 
+                        // só transferencia de evento
+                        else if(message->Data->Event != END) {
+                            // crio nova mensagem com:
+                            //  - mesmo id, pois é só novo evento
+                            //  - mesmo owner
+                            //  - currentRound iguak, current Event muda
+
+                            ctr->CurrentEvent = GetNextEvent(message->Data->Event);
+                        }
+
                         // atualizo a nova data com o novo evento próximo
                         data->Event = ctr->CurrentEvent;
                         data->Round = ctr->currentRound;
 
-                        message->Id = GenerateId(ctr->currentRound, endpoint->Id);
-                        message->Data = data;
-
-                        // marco o controll
-
+                        struct Message *newMessage = CreateMessage(newMessageId, messageOwner, ctr->currentRound, endpoint, DATA, data);
+                    
                         // envio
-                        re = SendMessage(message);
+                        re = SendMessage(newMessage);
                         if(!re.State){
                             // mensagem não pode ser enviada
                             // fazer uma outra tentativa
-                        }
-
-                        printf("[RUN] Message enviada: %s", message->Id);
+                        }else
+                            printf("[RUN] Message enviada: %s", message->Id);
                         
                         DestroiData(data);
-                        // lembrar destruir de novo no EVENT Fin
-                    
-                    }else{
-                        // nao sou dono da mensagem
+                        DestroiMessage(newMessage);
 
-                        // preciso ser o novo dono? ou seja, passar a ser servidor?
+                        // mensagem processada, posso destruir
+                        DestroiMessage(message);
+                    
+                    }
+                    // nao sou dono da mensagem sou player, não há transição
+                    else if(message->OwnerId != endpoint->Id && !endpoint->IsServer){
+                        
+                        if(!player) player = CreatePlayer(endpoint->Id);
+
+                        // sou player, desestruturo msm
+                        // importante, atualizo dados locais
+
+                        /*
+                            Cuidar das retransmissões aqui: duplicatas, etc.
+                        */
+                        ctr->CurrentEvent = message->Data->Event;
+                        ctr->currentRound = message->Data->Round;
+                        
+                        
+                        switch (ctr->CurrentEvent)
+                        {
+                            case INIT: {
+                                // add message de inicio para o jogador
+                                // (*) mostrar num menu dados
+                                bool result = UpdatePlayerData(message->Data, player);
+                                if(!result){
+                                    // trata erro
+                                }
+
+                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, ctr->currentRound, endpoint, DATA, message->Data);
+                                re = SendMessage(newMessage);
+                                if(!re.State){
+                                    // nova tent? 
+                                }else 
+                                    printf("[RUN] Sua mensagem foi enviada! %s", newMessage->Id);
+
+                                DestroiMessage(newMessage);
+                 
+                                // já processada, pode destruir
+                                DestroiMessage(message);
+                                break;  
+                            
+                            } case BET : {
+                                // salvo message que irei usar quadno user retornar resposta
+                                _temporaryMessage = message;
+                                // peço dados
+                                AskUserInput("[ENTRY] Qual o tipo de aposta", &ctr->IsWaitingInput, PLAYER_ASK_BET_TYPE, MAX_BET_TYPE);
+                                // mando mensagem no controle de respostas
+                                break;
+
+                            } case RESULT: {
+                                // resultado não gera data novo, só atualiza dados do player
+                                bool result = UpdatePlayerData(message->Data, player);
+                                if(!result){
+                                    // mostra erro
+                                    // retorna?
+                                }
+
+                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, ctr->currentRound, endpoint, DATA, message->Data);
+                                re = SendMessage(newMessage);
+                                if(!re.State){
+                                    // nova tent? 
+                                }else 
+                                    printf("[RUN] Sua mensagem foi enviada! %s", newMessage->Id);
+
+                                DestroiMessage(newMessage);
+
+                                // já processada, pode destruir
+                                DestroiMessage(message);
+                                break;  
+
+                            } case END: {
+                                // só notifica o usuário que terminou
+                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, ctr->currentRound, endpoint, DATA, message->Data);
+                                re = SendMessage(newMessage);
+                                if(!re.State){
+                                    // nova ten?
+                                }
+
+                                DestroiMessage(newMessage);
+                                DestroiMessage(message);
+                                break;
+                            }
+                        }
+                        
+
+                        
+                    }
+                    // preciso ser o novo dono, há transição
+                    else if(message->OwnerId == endpoint->Id && !endpoint->IsServer && message->Data->Event == INIT) {
                         // preciso ser o novo dono se 
                         //   - antes era jogador 
                         //   - dono da mensagem sou eu
                         //   - evento da mensagem [INIT]
-                        if(!endpoint->IsServer && message->OwnerId == endpoint->Id){
-                            // como preciso ser o novo dono, destruo player existente
-                            // crio server
-                            endpoint->IsServer = true;
-
-                            if(player){
-                                DestroiPlayer(player);
-                                player = NULL;
-                            }
-
-                            if(!server) server = CreatePlayerServer(endpoint->Id);
-
-                            ctr->CurrentEvent = INIT;
-                            ctr->currentRound = 1;
-                            
-                            AskUserInput("[Entry] Quantas rodadas deseja realizar?", &ctr->IsWaitingInput, SERVER_ASK_ROUNDS, MAX_ROUNDS_PER_USER);
-                            // manda mensagem no controle de respostas
-
-                        }else {
-                            // não preciso ser o novo dono, sou player, continuo player
-                            if(!player) player = CreatePlayer(endpoint->Id);
-
-                            // sou player, desestruturo msm
-                            // importante, atualizo dados locais
-                            ctr->CurrentEvent = message->Data->Event;
-                            ctr->currentRound = message->Data->Round;
-
-                            // peço dados
-                            struct data *data = GeneratePlayerData(message->Data, player);
                         
-                            // o unico que muda são dados e control
-                            // envio bastão
-                            SendMessage(message);
+                        endpoint->IsServer = true;
 
-                            DestroiData(data);
+                        // como preciso ser o novo dono, destruo player existente
+                        if(player){
+                            DestroiPlayer(player);
+                            player = NULL;    
                         }
+
+                        // crio server
+                        if(!server) server = CreatePlayerServer(endpoint->Id);
+
+                        // atualizo meus dados locais - mensagem já chega atualizada
+                        ctr->CurrentEvent = message->Data->Event;
+                        ctr->currentRound = message->Data->Round;
+                            
+                        AskUserInput("[Entry] Quantas rodadas deseja realizar?", &ctr->IsWaitingInput, SERVER_ASK_ROUNDS, MAX_ROUNDS_PER_USER);
+                        // manda mensagem no controle de respostas
+                        // uma nova mensagem é criada, então destruo a anterior
+                        DestroiMessage(message);
                     }
+                } 
+                // ack para mim
+                else if(message->Type == ACK && message->Destination.EndpointID == endpoint->Id){
 
-                    continue;
                 }
+                // bastão que nao é para mim, porém vou retransmittir
+                else if(message->Type == DATA && message->Destination.EndpointID != endpoint->Id && message->Transfer->DestinationEndpointId == endpoint->Id){
 
-                if(message->Type == ACK){
-                    continue;
+                } 
+                // ack não é para mim, porém vou retransmittir
+                else if(message->Type == ACK && message->Destination.EndpointID != endpoint->Id && message->Transfer->DestinationEndpointId == endpoint->Id){
+
                 }
-
-                // destruo a mensage
-                DestroiMessage(message);
             }
         }
 
@@ -214,36 +348,83 @@ bool RunEventController (struct Endpoint *endpoint) {
 
             }else if (response.data > 0){
                 switch (response.event) {
-                    case SERVER_ASK_ROUNDS:
-                        ctr->MaxRounds = response.data;
+                    case SERVER_ASK_ROUNDS: {
                         // cria mensagem 
                         // manda bastão
+                        // aqui sempre é primeiro bastão desse servidor
+                        // no caso de transferencias, o bastão já vem com o round e evento setado
+
+                        ctr->MaxRounds = response.data;
+
+                        struct Data *data = CreateData(ctr->currentRound, ctr->MaxRounds, ctr->CurrentEvent);
+                        char *messageId = GenerateId(ctr->currentRound, endpoint->Id);
+                        struct Message *msm = CreateMessage(messageId, endpoint->Id, ctr->currentRound, endpoint, DATA, data);
+                        
+                        re = SendMessage(msm);
+                        if(!re.State){
+                            // tenta novamente?
+                        }else
+                            printf("[RUN] Message enviada com sucesso %s", msm->Id);
+
+                        DestroiData(data);
+                        DestroiMessage(msm);
                         break;
                     
-                    case SERVER_FINISH_ROUND:
+                    } case SERVER_FINISH_ROUND: {
                         // manda evento fim
                         // 
                         break;
                     
                     // (*) MARIA: COLOCAR AQUI DO JOGADOR DEPENDENDO DO EVENTO
-                    case PLAYER_ASK_BET_TYPE:
+                    } case PLAYER_ASK_BET_TYPE: {
                         // tipo da aposta
                         player->Bet.type = response.data;
+                        AskUserInput("[RUN] Qual o valor da aposta? ", &ctr->IsWaitingInput, PLAYER_ASK_BET_VALUE, MAX_BET_VALUE);
                         break;
 
-                    case PLAYER_ASK_BET_VALUE:
+                    } case PLAYER_ASK_BET_VALUE: {
                         // valor da aposta
                         player->Bet.value = response.data;
+                        
                         // gera mensagem
                         // manda bastão 
+                        struct Data *data = GeneratePlayerData(_temporaryMessage->Data, player);
+                        struct Message *msm = UpdateMessage(_temporaryMessage, endpoint, DATA, data);
+                        
+                        re = SendMessage(msm);
+                        if(!re.State){
+                            // tenta nov? 
+                        }else
+                            printf("[RUN] Message envivada com sucesso! %s", msm->Id);
+
+                        DestroiData(data);
+                        DestroiMessage(msm);
+                        // destroi o q ta no endereço de temporary, ou seja, message original
+                        DestroiMessage(_temporaryMessage);
+                        _temporaryMessage = NULL;
+                        
                         break;
 
-                    default:
+                    } default:
                         break;
                 }
             }
         }
     }
+
+    // clear data
+    if (player) DestroiPlayer(player);
+    if (server) DestroiServer (server);
+    if (ctr) DestroiEventController (ctr);
+    if (_temporaryMessage) DestroiMessage (_temporaryMessage);
+
+    // Restaurar configuração original do stdin
+    if (RestoreInput() < 0) {
+        printf("[RUN_ERROR] Não foi possível restaurar stdin\n");
+        endWithoutErro = false;
+    }
+
+    StopAllSocketConnection();
 
     return endWithoutErro;
 }

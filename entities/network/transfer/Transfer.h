@@ -2,7 +2,7 @@
 #define __TRANSPORT__
 
 #include <stdint.h>
-#include "../../config/networkDefs.h"
+#include "../../../config/networkDefs.h"
 
 enum TransferState{
     RECEIVED,

@@ -7,10 +7,10 @@
 #include "../../entities/game/data/Data.h"
 
 struct EventController {
-    // num máx de jogadas para servidor ativo
-    int MaxRounds;
     // rodada atual
     int currentRound;
+    // num máx de jogadas para servidor ativo
+    int MaxRounds;
     // evento atual ativo
     enum Event CurrentEvent;
     // flag para saber se aguarda entrada do usuário
@@ -23,5 +23,7 @@ struct EventController {
 bool RunEventController (struct Endpoint *endpoint);
 
 void StopEventController (struct Endpoint *endpoint);
+
+void DestroiEventController (struct EventController *ctr);
 
 #endif

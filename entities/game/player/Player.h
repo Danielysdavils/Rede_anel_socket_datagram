@@ -13,6 +13,8 @@ struct Player{
 // porém o retorno deve contér o Data
 struct Data *GeneratePlayerData (struct Data *data, struct Player *player);
 
+bool UpdatePlayerData (struct Data *data, struct Player *player);
+
 struct Player *CreatePlayer(int playerId);
 
 void DestroiPlayer(struct Player *player);

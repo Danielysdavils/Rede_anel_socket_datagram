@@ -6,6 +6,7 @@
 #include "../../game/data/Data.h"
 #include "../../../config/gameDefs.h"
 #include "../../../config/networkDefs.h"
+#include "../transfer/Transfer.h"
 
 /* data = bastão; ACK = info */
 enum MessageType {
@@ -52,7 +53,10 @@ struct Message {
 
 struct Message *DecodeMessage (size_t data);
 
-struct Response *CreateMessage (int currentRodada, struct Endpoint *endpoint, enum MessageType type, struct Data *data);
+struct Response *CreateMessage (char *messageId, int messageOwner, int currentRodada, struct Endpoint *endpoint, enum MessageType type, struct Data *data);
+
+// cria nova mensagem a partir da antiga
+struct Message *UpdateMessage (struct Message *message, struct Endpoint *endpoint, enum MessageType type, struct Data *data);
 
 void DestroiMessage (struct Message *message);
 

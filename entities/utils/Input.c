@@ -11,10 +11,33 @@ static enum ControlInputEvents _currentEvent = ANY_EVENT;
 static int _currentInputMaxLimit = 1;
 
 int ConfigureInput(void) {
-    flags = fcntl(STDIN_FILENO, F_GETFL);
-    if(flags == -1) return -1;
+    if (flags != -1)
+        return 0; // Já configurado
 
-    return fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+    int originalFlags = fcntl(STDIN_FILENO, F_GETFL);
+
+    if (originalFlags == -1)
+        return -1;
+
+    if (fcntl(STDIN_FILENO, F_SETFL,
+              originalFlags | O_NONBLOCK) == -1)
+        return -1;
+
+    flags = originalFlags;
+    return 0;
+}
+
+int RestoreInput(void) {
+    if (flags == -1)
+        return -1;
+
+    if (fcntl(STDIN_FILENO, F_SETFL, flags) == -1) {
+        perror("RestoreInput");
+        return -1;
+    }
+
+    flags = -1;
+    return 0;
 }
 
 struct InputResponse CreateInputResponse(int data, enum ControlInputEvents event) {

@@ -1,6 +1,9 @@
 #ifndef __BET__
 #define __BET__
 
+#define MAX_BET_TYPE 4
+#define MAX_BET_VALUE 100
+
 enum BetType {
     Numero,
     Preto,
