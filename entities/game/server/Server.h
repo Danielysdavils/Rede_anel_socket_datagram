@@ -12,7 +12,7 @@ struct PlayerServer{
 
 struct PlayerServer *CreatePlayerServer (int serverID);
 
-// importante que o valor retornado seja nova struct, não reutilizar do parametro
+// importante retornar o mesmo objeto do parametro alterado !!!!
 struct Data *GenerateServerData (struct Data *data, struct PlayerServer *server); 
 
 bool UpdateServerData (struct Data *data, struct PlayerServer *server);

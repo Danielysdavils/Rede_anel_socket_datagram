@@ -10,7 +10,7 @@ struct Player{
 
 // retorna resposta do player dependendo do evento
 // (*) Maria adicionar as demais props e mudar o nome se quiser
-// porém o retorno deve contér o Data
+// o retorno deve ser o mesmo struct do parametro !!!!
 struct Data *GeneratePlayerData (struct Data *data, struct Player *player);
 
 bool UpdatePlayerData (struct Data *data, struct Player *player);

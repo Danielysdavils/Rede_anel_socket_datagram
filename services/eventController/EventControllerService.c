@@ -192,21 +192,24 @@ bool RunEventController (struct Endpoint *endpoint) {
                         data->Round = ctr->currentRound;
 
                         struct Message *newMessage = CreateMessage(newMessageId, messageOwner, ctr->currentRound, endpoint, DATA, data);
-                    
-                        // envio
-                        re = SendMessage(newMessage);
-                        if(!re.State){
-                            // mensagem não pode ser enviada
-                            // fazer uma outra tentativa
-                        }else
-                            printf("[RUN] Message enviada: %s", message->Id);
-                        
-                        DestroiData(data);
-                        DestroiMessage(newMessage);
+                        if(newMessage == NULL){
+                            // trato err
+                        }else{
+                            message->Data = NULL;
 
+                            // envio
+                            re = SendMessage(newMessage);
+                            if(!re.State){
+                                // mensagem não pode ser enviada
+                                // fazer uma outra tentativa
+                            }else
+                                printf("[RUN] Message enviada: %s", message->Id);
+                            
+                            DestroiMessage(newMessage);
+                        }
+                        
                         // mensagem processada, posso destruir
                         DestroiMessage(message);
-                    
                     }
                     // nao sou dono da mensagem sou player, não há transição
                     else if(message->OwnerId != endpoint->Id && !endpoint->IsServer){
@@ -234,14 +237,20 @@ bool RunEventController (struct Endpoint *endpoint) {
                                 }
 
                                 struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, ctr->currentRound, endpoint, DATA, message->Data);
-                                re = SendMessage(newMessage);
-                                if(!re.State){
-                                    // nova tent? 
-                                }else 
-                                    printf("[RUN] Sua mensagem foi enviada! %s", newMessage->Id);
+                                if(newMessage == NULL){
 
-                                DestroiMessage(newMessage);
-                 
+                                }else{
+                                    message->Data = NULL;
+
+                                    re = SendMessage(newMessage);
+                                    if(!re.State){
+                                        // nova tent? 
+                                    }else 
+                                        printf("[RUN] Sua mensagem foi enviada! %s", newMessage->Id);
+
+                                    DestroiMessage(newMessage);
+                                }
+                                
                                 // já processada, pode destruir
                                 DestroiMessage(message);
                                 break;  
@@ -263,14 +272,20 @@ bool RunEventController (struct Endpoint *endpoint) {
                                 }
 
                                 struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, ctr->currentRound, endpoint, DATA, message->Data);
-                                re = SendMessage(newMessage);
-                                if(!re.State){
-                                    // nova tent? 
-                                }else 
-                                    printf("[RUN] Sua mensagem foi enviada! %s", newMessage->Id);
+                                if(newMessage == NULL){
+                                    // tratar
+                                }else{
+                                    message->Data = NULL;
 
-                                DestroiMessage(newMessage);
+                                    re = SendMessage(newMessage);
+                                    if(!re.State){
+                                        // nova tent? 
+                                    }else 
+                                        printf("[RUN] Sua mensagem foi enviada! %s", newMessage->Id);
 
+                                    DestroiMessage(newMessage);
+                                }
+                                
                                 // já processada, pode destruir
                                 DestroiMessage(message);
                                 break;  
@@ -278,19 +293,25 @@ bool RunEventController (struct Endpoint *endpoint) {
                             } case END: {
                                 // só notifica o usuário que terminou
                                 struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, ctr->currentRound, endpoint, DATA, message->Data);
-                                re = SendMessage(newMessage);
-                                if(!re.State){
-                                    // nova ten?
-                                }
+                                if(newMessage == NULL){
+                                    // tratar com retry?? (!)
+                                
+                                }else{
+                                    message->Data = NULL;
 
-                                DestroiMessage(newMessage);
-                                DestroiMessage(message);
+                                    re = SendMessage(newMessage);
+                                    if(!re.State){
+                                        // nova ten?
+                                    }else
+                                        printf("[RUN] Sua mensagem foi enviada! %s", newMessage->Id);
+
+                                    DestroiMessage(newMessage);
+                                }
+                                
+                                DestroiMessage(message); //(*) tenho q ver
                                 break;
                             }
                         }
-                        
-
-                        
                     }
                     // preciso ser o novo dono, há transição
                     else if(message->OwnerId == endpoint->Id && !endpoint->IsServer && message->Data->Event == INIT) {
@@ -358,15 +379,22 @@ bool RunEventController (struct Endpoint *endpoint) {
 
                         struct Data *data = CreateData(ctr->currentRound, ctr->MaxRounds, ctr->CurrentEvent);
                         char *messageId = GenerateId(ctr->currentRound, endpoint->Id);
-                        struct Message *msm = CreateMessage(messageId, endpoint->Id, ctr->currentRound, endpoint, DATA, data);
-                        
-                        re = SendMessage(msm);
-                        if(!re.State){
-                            // tenta novamente?
-                        }else
-                            printf("[RUN] Message enviada com sucesso %s", msm->Id);
 
-                        DestroiData(data);
+                        struct Message *msm = CreateMessage(messageId, endpoint->Id, ctr->currentRound, endpoint, DATA, data);
+                        if(msm == NULL){
+                            // errp
+                            DestroiData(data);
+                            endWithoutErro = false;
+                            break;
+                            
+                        }else{
+                            re = SendMessage(msm);
+                            if(!re.State){
+                                // tenta novamente?
+                            }else
+                                printf("[RUN] Message enviada com sucesso %s", msm->Id);
+                        }
+                        
                         DestroiMessage(msm);
                         break;
                     
@@ -375,7 +403,6 @@ bool RunEventController (struct Endpoint *endpoint) {
                         // 
                         break;
                     
-                    // (*) MARIA: COLOCAR AQUI DO JOGADOR DEPENDENDO DO EVENTO
                     } case PLAYER_ASK_BET_TYPE: {
                         // tipo da aposta
                         player->Bet.type = response.data;
@@ -390,15 +417,20 @@ bool RunEventController (struct Endpoint *endpoint) {
                         // manda bastão 
                         struct Data *data = GeneratePlayerData(_temporaryMessage->Data, player);
                         struct Message *msm = UpdateMessage(_temporaryMessage, endpoint, DATA, data);
-                        
-                        re = SendMessage(msm);
-                        if(!re.State){
-                            // tenta nov? 
-                        }else
-                            printf("[RUN] Message envivada com sucesso! %s", msm->Id);
+                        if(msm == NULL){
 
-                        DestroiData(data);
-                        DestroiMessage(msm);
+                        }else {
+                            _temporaryMessage->Data = NULL;
+
+                            re = SendMessage(msm);
+                            if(!re.State){
+                                // tenta nov? 
+                            }else
+                                printf("[RUN] Message envivada com sucesso! %s", msm->Id);
+
+                            DestroiMessage(msm);
+                        }
+
                         // destroi o q ta no endereço de temporary, ou seja, message original
                         DestroiMessage(_temporaryMessage);
                         _temporaryMessage = NULL;

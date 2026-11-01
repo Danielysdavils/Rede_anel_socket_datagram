@@ -8,7 +8,7 @@
     se reconhecer a sim mesma
 */
 
-#define LOCAL_IP "172.16.2.120";
+#define LOCAL_IP "172.16.2.120"
 
 #define PORT 8080
 

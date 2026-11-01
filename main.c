@@ -15,15 +15,9 @@ int main () {
 
     printf("[INIT] Preparando sua maquina. Aguarde!");
 
-    struct Response response = PrepareEndpoint();    
-    if(!response.State){
-        printf("[INIT-ERRO] Erro ao preparar sua maquina: %s", response.Message);
-        ClearEndpoint();
-        return 0;
-    }
-
-    struct Endpoint *endpoint = (struct Endpoint *)response.Data;
-
+    struct Endpoint *endpoint = CreateAndPrepareEndpoint();    
+    if(!endpoint) return 0;
+    
     printf("[INIT] Maquina preparada com sucesso!");
 
     printf("[INIT] - Seu IP: %s", endpoint->Network->Ip);

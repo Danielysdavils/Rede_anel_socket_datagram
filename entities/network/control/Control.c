@@ -37,3 +37,10 @@ void MarkProccessedError (struct Control *control) {
 void DestroyControl (struct Control *control) {
     free (control);
 }
+
+bool CompareControl (const char *controlA, const char *controlB){
+    if(controlA == NULL || controlB == NULL)
+        return false;
+    
+    return strcmp(controlA, controlB);
+}

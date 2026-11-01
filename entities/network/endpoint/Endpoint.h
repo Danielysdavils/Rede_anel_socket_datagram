@@ -5,6 +5,8 @@
 #include "../../../config/networkDefs.h"
 #include "../network/Network.h"
 #include "../../utils/Response.h"
+#include "../../../config/env.h"
+#include "../storage/Storage.h"
 
 struct Endpoint
 {
@@ -24,9 +26,7 @@ struct Endpoint
     struct Storage *Storage;
 };
 
-struct Response PrepareEndpoint();
-
-struct Endpoint* CreateEndpoint (struct Network *net, int id, bool isServer, struct Storage *storage);
+struct Endpoint* CreateAndPrepareEndpoint ();
 
 void DestroyEndpoint (struct Endpoint *endpoint);
 

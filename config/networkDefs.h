@@ -40,9 +40,9 @@
 #define D 3
 
 // para histórico local de transferencias recebidas
-#define MAX_TRANSFERS 32
+#define MAX_TRANSFERS 64
 
-#define MAX_TRANSFER_ID_SIZE 64
+#define MAX_TRANSFER_ID_SIZE 100
 
 // tamanho máximo para criação de ids 
 #define TAM_LIMIT_ID 50

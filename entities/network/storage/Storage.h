@@ -2,7 +2,7 @@
 #define __STORAGE__
 
 #include <stdint.h>
-#include "../../config/networkDefs.h"
+#include "../../../config/networkDefs.h"
 
 struct Storage {
     // cada endpoint tem um histórico local de transferencias para identificar transferencias já processadas.
@@ -12,7 +12,7 @@ struct Storage {
 
     // histórico local de transferencias enviadas
     // necessário para identificar mensagens que ainda não receberam acks 
-    char SendedControlTransfers[MAX_TRANSFER_ID_SIZE][MAX_TRANSFER_ID_SIZE];
+    char SendedControlTransfers[MAX_TRANSFERS][MAX_TRANSFER_ID_SIZE];
     int ControlSendedCount;
 
     // matriz local de caminhos disponíveis
@@ -20,6 +20,16 @@ struct Storage {
     // versão da matriz (ajuda identificar mudanças)
     int PathVersion;
 };
+
+struct Storage *CreateStorage();
+
+void DestroyStorage();
+
+bool AddReceivedControlTransfer(struct Storage *storage, char *controlId);
+
+bool RemoveReceivedControlTransfer(struct Storage *storage, char *controlId);
+
+
 
 #endif
 
