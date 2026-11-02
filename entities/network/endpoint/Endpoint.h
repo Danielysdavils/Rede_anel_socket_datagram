@@ -8,6 +8,13 @@
 #include "../../../config/env.h"
 #include "../storage/Storage.h"
 
+// Dto simples para identificar dados do destinatario/origem da mensagem
+struct EndpointDto {
+    int EndpointID;
+    const char *Ip;
+    int Port;
+};
+
 struct Endpoint
 {
     // identificador único para o endpoint

@@ -9,7 +9,6 @@
 
 #include "./SocketService.h"
 
-#define TAM_BUFFER 1024
 
 static int server_fd = -1;
 static int connected_socket = -1;
@@ -100,7 +99,7 @@ struct Response ReceiveMessage() {
     char buffer[TAM_BUFFER];
 
     struct sockaddr_in sender = {0};
-    socklen_t senderLenght = size_of(sender);
+    socklen_t senderLenght = sizeof(sender);
 
     ssize_t received = recvfrom(
         connected_socket,
@@ -122,7 +121,16 @@ struct Response ReceiveMessage() {
         return response;
     }
 
-    struct Message *data = DecodeMessage(received);
+    if(received == 0){
+        ResponseErrorData(&response, "[ERRO] Datagram empty", CODE_ANY_DATA);
+        return response;
+    }
+
+    struct Message *data = DecodeMessage(buffer, (size_t)received);
+    if(data == NULL){
+        ResponseErrorData(&response, "[ERRO] Error decoding data!", CODE_GENERAL_ERROR);
+        return response;
+    }
 
     ResponseAccertData(&response, data, CODE_GENERAL_ACCERT);
     return response;    

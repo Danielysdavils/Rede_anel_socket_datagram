@@ -346,11 +346,11 @@ bool RunEventController (struct Endpoint *endpoint) {
 
                 }
                 // bastão que nao é para mim, porém vou retransmittir
-                else if(message->Type == DATA && message->Destination.EndpointID != endpoint->Id && message->Transfer->DestinationEndpointId == endpoint->Id){
+                else if(message->Type == DATA && message->Destination.EndpointID != endpoint->Id && message->Transfer->DestinationEndpointId.EndpointID == endpoint->Id){
 
                 } 
                 // ack não é para mim, porém vou retransmittir
-                else if(message->Type == ACK && message->Destination.EndpointID != endpoint->Id && message->Transfer->DestinationEndpointId == endpoint->Id){
+                else if(message->Type == ACK && message->Destination.EndpointID != endpoint->Id && message->Transfer->DestinationEndpointId.EndpointID == endpoint->Id){
 
                 }
             }

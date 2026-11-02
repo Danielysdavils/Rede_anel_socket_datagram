@@ -7,6 +7,7 @@
 #include "../../../config/gameDefs.h"
 #include "../../../config/networkDefs.h"
 #include "../transfer/Transfer.h"
+#include "../endpoint/Endpoint.h"
 
 /* data = bastão; ACK = info */
 enum MessageType {
@@ -14,13 +15,6 @@ enum MessageType {
     DATA
 };
 
-// Dto simples para identificar dados do destinatario/origem da mensagem
-// aqui são os dados para transferencia do bastão, não transferencias de re-transmissões !
-struct EndpointDto {
-    int EndpointID;
-    const char *Ip;
-    int Port;
-};
 
 struct Message {
     // Identificador único do bastão
@@ -45,17 +39,15 @@ struct Message {
     // controle de entrega da mensagem
     // exclusiva para transferencia do bastão
     struct Control *Control;
-    // info do tamanho dos dados
-    int TamData;
     // dados
     struct Data *Data;
 };
 
-struct Message *DecodeMessage (size_t data);
+struct Message *DecodeMessage (char buffer[TAM_BUFFER], size_t data);
 
 struct Response *CreateMessage (char *messageId, int messageOwner, int currentRodada, struct Endpoint *endpoint, enum MessageType type, struct Data *data);
 
-// cria nova mensagem a partir da antiga
+// cria uma nova mensagem a partir da antiga (atualiza, porém cria registro novo apartir do velho)
 struct Message *UpdateMessage (struct Message *message, struct Endpoint *endpoint, enum MessageType type, struct Data *data);
 
 void DestroiMessage (struct Message *message);

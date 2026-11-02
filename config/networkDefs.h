@@ -8,6 +8,9 @@
     contidas neste arquivo
 */
 
+// SOCKET BUFFER
+#define TAM_BUFFER 1024
+
 #define MAX_RETRYS 10
 
 // timeout máximo para que alguma mensagem seja recebida por qualquer endpoint
