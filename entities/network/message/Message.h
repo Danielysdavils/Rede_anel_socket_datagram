@@ -43,7 +43,9 @@ struct Message {
     struct Data *Data;
 };
 
-struct Message *DecodeMessage (char buffer[TAM_BUFFER], size_t data);
+size_t EncodeMessage (struct Message *message, uint8_t *data);
+
+struct Message *DecodeMessage (size_t data);
 
 struct Response *CreateMessage (char *messageId, int messageOwner, int currentRodada, struct Endpoint *endpoint, enum MessageType type, struct Data *data);
 

@@ -12,6 +12,15 @@ struct BufferWriter {
     size_t offset;
 };
 
+
+struct BufferWriter *CreateWriter(size_t capacity);
+
+void DestroiWriter(struct BufferWriter *writer);
+
+bool WriteString(struct BufferWriter *writer, char *string);
+
+bool CanWrite(struct BufferWriter *writer, size_t value);
+
 bool WriteU8(struct BufferWriter *writer, uint8_t value);
 
 bool WriteU16(struct BufferWriter *writer, uint16_t value);
