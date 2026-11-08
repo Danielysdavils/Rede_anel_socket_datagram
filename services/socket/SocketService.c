@@ -8,8 +8,6 @@
 #include <arpa/inet.h>
 
 #include "./SocketService.h"
-#include "../../entities/network/bufferWriter/Writer.h"
-
 
 static int server_fd = -1;
 static int connected_socket = -1;
@@ -70,11 +68,13 @@ struct Response SendMessage(struct Message *message) {
         return response;
     }
 
-    uint8_t *data;
+    uint8_t data[TAM_BUFFER];
+    size_t capacity = sizeof(data);
+
     size_t lenght;
 
-    size_t len = EncodeMessage(message, data);
-    if(len <=0 || data == NULL){
+    size_t len = EncodeMessage(message, data, capacity);
+    if(len <= 0 || data == NULL){
         ResponseError(&response, "[ERROR]: Failed to encode message");
         return response;
     }
@@ -134,7 +134,7 @@ struct Response ReceiveMessage() {
         return response;
     }
 
-    struct Message *data = DecodeMessage(buffer);
+    struct Message *data = DecodeMessage(buffer, sizeof(buffer));
     if(data == NULL){
         ResponseErrorData(&response, "[ERRO] Error decoding data!", CODE_GENERAL_ERROR);
         return response;

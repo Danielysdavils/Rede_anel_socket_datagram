@@ -126,7 +126,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                 struct Message *message = (struct Message *)re.Data;
                 
                 // bastão e é para mim
-                if(message->Type == DATA && message->Destination.EndpointID == endpoint->Id){
+                if(message->Type == DATA && message->DestinationId == endpoint->Id){
                     // sou o dono e se sou server
                     if(message->OwnerId == endpoint->Id && endpoint->IsServer){
                         // sou server, cria uma vez no começo
@@ -166,8 +166,8 @@ bool RunEventController (struct Endpoint *endpoint) {
                             ctr->currentRound++;
                             ctr->CurrentEvent = INIT;
 
-                            newMessageId = GenerateId(ctr->currentRound, endpoint->Next_endpoint_id);
-                            messageOwner = endpoint->Next_endpoint_id;
+                            newMessageId = GenerateId(ctr->currentRound, endpoint->EndpointNext);
+                            messageOwner = endpoint->EndpointNext;
 
                             // Como deixo de ser servidor
                             if(server){
@@ -191,7 +191,10 @@ bool RunEventController (struct Endpoint *endpoint) {
                         data->Event = ctr->CurrentEvent;
                         data->Round = ctr->currentRound;
 
-                        struct Message *newMessage = CreateMessage(newMessageId, messageOwner, ctr->currentRound, endpoint, DATA, data);
+                        int retry = 0;
+
+                        // nenhuma transferencia por enquanto, então dest e or = aos da mensagem
+                        struct Message *newMessage = CreateMessage(newMessageId,messageOwner,retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, data);
                         if(newMessage == NULL){
                             // trato err
                         }else{
@@ -235,8 +238,8 @@ bool RunEventController (struct Endpoint *endpoint) {
                                 if(!result){
                                     // trata erro
                                 }
-
-                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, ctr->currentRound, endpoint, DATA, message->Data);
+                                int retry = 0;
+                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, retry, endpoint, endpoint->EndpointNext, endpoint->EndpointPrevious, DATA, message->Data);
                                 if(newMessage == NULL){
 
                                 }else{
@@ -271,7 +274,8 @@ bool RunEventController (struct Endpoint *endpoint) {
                                     // retorna?
                                 }
 
-                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, ctr->currentRound, endpoint, DATA, message->Data);
+                                int retry = 0;
+                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, message->Data);
                                 if(newMessage == NULL){
                                     // tratar
                                 }else{
@@ -291,8 +295,9 @@ bool RunEventController (struct Endpoint *endpoint) {
                                 break;  
 
                             } case END: {
+                                int retry = 0;
                                 // só notifica o usuário que terminou
-                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, ctr->currentRound, endpoint, DATA, message->Data);
+                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, message->Data);
                                 if(newMessage == NULL){
                                     // tratar com retry?? (!)
                                 
@@ -342,15 +347,15 @@ bool RunEventController (struct Endpoint *endpoint) {
                     }
                 } 
                 // ack para mim
-                else if(message->Type == ACK && message->Destination.EndpointID == endpoint->Id){
+                else if(message->Type == ACK && message->DestinationId == endpoint->Id){
 
                 }
                 // bastão que nao é para mim, porém vou retransmittir
-                else if(message->Type == DATA && message->Destination.EndpointID != endpoint->Id && message->Transfer->DestinationEndpointId.EndpointID == endpoint->Id){
+                else if(message->Type == DATA && message->DestinationId != endpoint->Id && message->Transfer->DestinationEndpointId == endpoint->Id){
 
                 } 
                 // ack não é para mim, porém vou retransmittir
-                else if(message->Type == ACK && message->Destination.EndpointID != endpoint->Id && message->Transfer->DestinationEndpointId.EndpointID == endpoint->Id){
+                else if(message->Type == ACK && message->DestinationId != endpoint->Id && message->Transfer->DestinationEndpointId == endpoint->Id){
 
                 }
             }
@@ -379,8 +384,9 @@ bool RunEventController (struct Endpoint *endpoint) {
 
                         struct Data *data = CreateData(ctr->currentRound, ctr->MaxRounds, ctr->CurrentEvent);
                         char *messageId = GenerateId(ctr->currentRound, endpoint->Id);
+                        int retry = 0;
 
-                        struct Message *msm = CreateMessage(messageId, endpoint->Id, ctr->currentRound, endpoint, DATA, data);
+                        struct Message *msm = CreateMessage(messageId, endpoint->Id, retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, data);
                         if(msm == NULL){
                             // errp
                             DestroiData(data);

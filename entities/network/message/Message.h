@@ -26,9 +26,9 @@ struct Message {
     // tipo da mensagem: bastão, ack
     enum MessageType Type;
     // dados simples da maquina que precisa receber o bastão
-    struct EndpointDto Destination;    
+    int DestinationId;    
     // dados simples da mquina que está enviando o bastão
-    struct EndpointDto Origin;
+    int OriginId;
     // criador da mensagem - sempre o servidor
     int OwnerId;
     // info sobre como a messagem será transportada
@@ -43,11 +43,13 @@ struct Message {
     struct Data *Data;
 };
 
-size_t EncodeMessage (struct Message *message, uint8_t *data);
+size_t EncodeMessage (struct Message *message, uint8_t *data, size_t capacity);
 
-struct Message *DecodeMessage (size_t data);
+struct Message *DecodeMessage (uint8_t *data, size_t capacity);
 
-struct Response *CreateMessage (char *messageId, int messageOwner, int currentRodada, struct Endpoint *endpoint, enum MessageType type, struct Data *data);
+struct Message *CreateMessage (char *messageId, int messageOwner, int retry, struct Endpoint *endpoint, int transferEndpointDest, int transferEndpointOr, enum MessageType type, struct Data *data);
+
+struct Message *CreateDecodeMessage (char *messageId, int messageRetry, enum MessageType type, int dest, int ori, int messageOwnerId, struct Transfer *transfer, struct Control *control, struct Data *data);
 
 // cria uma nova mensagem a partir da antiga (atualiza, porém cria registro novo apartir do velho)
 struct Message *UpdateMessage (struct Message *message, struct Endpoint *endpoint, enum MessageType type, struct Data *data);

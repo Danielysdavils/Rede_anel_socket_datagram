@@ -24,9 +24,9 @@ struct Endpoint
     // configuração de rede do endpoint (socket)
     struct Network *Network;
     // endpoint seguinte
-    int Next_endpoint_id;
+    int EndpointNext;
     // endpoint posterior
-    int Previous_endpoint_id;
+    int EndpointPrevious;
     // identificador se está vivo/activo (na rede)
     bool enabled;
     // dados locais do endpoint

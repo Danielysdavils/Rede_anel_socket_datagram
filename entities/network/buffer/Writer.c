@@ -1,9 +1,9 @@
 #include "Writer.h"
 
-struct BufferWriter *CreateWriter(size_t capacity){
+struct Buffer *CreateWriter(size_t capacity){
     if(capacity <= 0) return NULL;
 
-    struct BufferWriter *writer = malloc(sizeof(struct BufferWriter));
+    struct Buffer *writer = malloc(sizeof(struct Buffer));
     if(!writer){
         printf("[WRITER] Erro criating buffer writer");
         return NULL;
@@ -20,24 +20,16 @@ struct BufferWriter *CreateWriter(size_t capacity){
     return writer;
 }
 
-void DestroiWriter(struct BufferWriter *writer){
+void DestroiWriter(struct Buffer *writer){
     if(!writer) return;
 
     free(writer->buffer);
     free(writer);
 }
 
-// values representa a quantidade de bytes que preciso escrever
-bool CanWrite(struct BufferWriter *writer, size_t value){
-    if(writer == NULL || writer->buffer == NULL) return false;
 
-    if(writer->offset > writer->capacity) return false;
-
-    return (writer->capacity - writer->offset) >= value ;
-}
-
-bool WriteU8(struct BufferWriter *writer, uint8_t value) {
-    if(!CanWrite(writer, 1)) return false; 
+bool WriteU8(struct Buffer *writer, uint8_t value) {
+    if(!Can(writer, 1)) return false; 
 
     writer->buffer[writer->offset] = value;
     writer->offset++;
@@ -45,8 +37,8 @@ bool WriteU8(struct BufferWriter *writer, uint8_t value) {
     return true;
 }
 
-bool WriteU16(struct BufferWriter *writer, uint16_t value) {
-    if(!CanWrite(writer, 2)) return false; 
+bool WriteU16(struct Buffer *writer, uint16_t value) {
+    if(!Can(writer, 2)) return false; 
 
     writer->buffer[writer->offset] = (uint8_t)(value >> 8);
     writer->buffer[writer->offset + 1] = (uint8_t)value;
@@ -56,8 +48,8 @@ bool WriteU16(struct BufferWriter *writer, uint16_t value) {
     return true;
 }
 
-bool WriteU32(struct BufferWriter *writer, uint32_t value) {
-    if(!CanWrite(writer, 4)) return false; 
+bool WriteU32(struct Buffer *writer, uint32_t value) {
+    if(!Can(writer, 4)) return false; 
 
     writer->buffer[writer->offset] = (uint8_t)(value >> 24);
     writer->buffer[writer->offset + 1] = (uint8_t)(value >> 16);
@@ -70,7 +62,7 @@ bool WriteU32(struct BufferWriter *writer, uint32_t value) {
 
 // Estamos usando 1 byte para guardar o tamanho da string
 // não acho que passe de 255
-bool WriteString(struct BufferWriter *writer, char *string){
+bool WriteString(struct Buffer *writer, char *string){
     if(writer == NULL || writer->buffer == NULL || string == NULL) return false;
 
     size_t stringLenght = strlen(string);
@@ -78,7 +70,7 @@ bool WriteString(struct BufferWriter *writer, char *string){
 
     // verificamos se temos espaço para a string e +1 do byte que
     // guarda o tamanho da s
-    if(!CanWrite(writer, stringLenght + 1)) return false;
+    if(!Can(writer, stringLenght + 1)) return false;
 
     // escreve o tamanho da s
     if(!WriteU8(writer, (uint8_t)stringLenght)) return false;

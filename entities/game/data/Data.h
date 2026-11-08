@@ -1,6 +1,9 @@
 #ifndef __DATA__
 #define __DATA__
 
+#include <stdbool.h>
+#include <string.h>
+#include <stdio.h>
 #include "../bet/Bet.h"
 #include "../../../config/networkDefs.h";
 
@@ -38,6 +41,8 @@ struct Data
 
 // preencher bets automaticamente com valor 0 a partir dos ids das maquinas no networkDefs
 struct Data *CreateData (int round, int maxRound, enum Event event);
+
+struct Data *CreateCompleteData (int round, int maxRound, enum Event event, struct BetDto Bets[TOTAL_ENDPOINTS], struct BetDto Rewards[TOTAL_ENDPOINTS]);
 
 void DestroiData (struct Data *data);
 

@@ -1,10 +1,9 @@
-#include <stdio.h>
 #include "Control.h"
 #include "../../../config/networkDefs.h"
 
 // É usado para identificar uma transferencia do 'bastão lógico'
-struct Control *CreateControl (int messageId, int originId, int destinationId) {
-    struct Control *control = malloc(sizeof(struct Control));
+struct Control *CreateAndInitControl (int messageId, int originId, int destinationId) {
+    struct Control *control = calloc(1, sizeof(struct Control));
     if (!control) {
         printf("[CONTROL_ERROR]: Error in CreateControl function. Creating malloc");
         return NULL;
@@ -26,6 +25,23 @@ struct Control *CreateControl (int messageId, int originId, int destinationId) {
     return control;
 }
 
+struct Control *CreateControl (char *controlID, ControlState state) {
+    struct Control *control = calloc(1, sizeof(struct Control));
+    if (!control) {
+        printf("[CONTROL_ERROR]: Error in CreateControl function. Creating malloc");
+        return NULL;
+    }
+
+    control->ControlId = strdup(controlID);
+    if(!control->ControlId){
+        free(control);
+        return NULL;
+    }
+
+    control->State = state;
+    return control;
+}
+
 void MarkProccessed (struct Control *control) {
     control->State = PROCCESSED;
 }
@@ -35,7 +51,10 @@ void MarkProccessedError (struct Control *control) {
 }
 
 void DestroyControl (struct Control *control) {
-    free (control);
+    if(!control) return;
+
+    if(control->ControlId) free(control->ControlId);
+    if(control) free(control);
 }
 
 bool CompareControl (const char *controlA, const char *controlB){

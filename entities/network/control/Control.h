@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
 #include "../../../config/networkDefs.h"
 
 typedef enum {
@@ -21,7 +22,9 @@ struct Control {
 // compara dois id e verifica se são iguais
 bool CompareControl (const char *controlA, const char *controlB);
 
-struct Control *CreateControl (int messageId, int originId, int destinationId);
+struct Control *CreateAndInitControl (int messageId, int originId, int destinationId);
+
+struct Control *CreateControl (char *controlID, ControlState state);
 
 void MarkProccessed (struct Control *control);
 

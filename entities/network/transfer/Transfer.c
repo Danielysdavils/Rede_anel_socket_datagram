@@ -1,14 +1,14 @@
 #include "Transfer.h"
 
-struct Transfer *CreateTransfer (const char *transferId, struct EndpointDto origin, struct EndpointDto destino) {
-    struct Transfer *transfer = malloc(sizeof(struct Transfer));
+struct Transfer *CreateAndInitTransfer (const char *transferId, int EndpointOrigin, int EndpointDestino) {
+    struct Transfer *transfer = calloc(1, sizeof(struct Transfer));
     if (!transfer) {
         printf("[Transfer_ERROR]: Error in Transfer function. Creating malloc");
         return NULL;
     }
 
-    transfer->DestinationEndpointId = destino;
-    transfer->OriginEndpointId = origin;
+    transfer->DestinationEndpointId = EndpointDestino;
+    transfer->OriginEndpointId = EndpointOrigin;
 
     // a matriz de caminhos precisa ser incializada com 1
     // que indicam caminhos ativos, porém a diagonal é com 0 pois uma maquina não manda
@@ -30,16 +30,47 @@ struct Transfer *CreateTransfer (const char *transferId, struct EndpointDto orig
     return transfer;
 }
 
-bool UpdateTransfer (struct Transfer *transfer, struct EndpointDto origem, struct EndpointDto destino) {
+struct Transfer *CreateTransfer(char *transferId, int EndpointOrigin, int EndpointDest, uint8_t paths[TOTAL_ENDPOINTS][TOTAL_ENDPOINTS], int pathVersion, enum TransferState state){
+     if(transferId == NULL || paths == NULL){
+        printf("[TRANSFER_ERROR] Transfer id cant be a null value!");
+        return NULL;
+    }
+    
+    struct Transfer *transfer = calloc(1, sizeof(struct Transfer));
+    if (!transfer) {
+        printf("[Transfer_ERROR]: Error in Transfer function. Creating malloc");
+        return NULL;
+    }
+
+    transfer->TransferId = strdup(transferId);
+    if (!transfer->TransferId) {
+        free(transfer);
+        return NULL;
+    }
+
+    transfer->DestinationEndpointId = EndpointDest;
+    transfer->OriginEndpointId = EndpointOrigin;
+
+    memcpy(transfer->AvailablePaths, paths, sizeof(transfer->AvailablePaths));
+
+    transfer->PathVersion = pathVersion;
+    transfer->Status = state;
+
+    return transfer;
+}
+
+bool UpdateTransfer (struct Transfer *transfer, int EndpointOrigem, int EndpointDestino) {
     if(transfer == NULL) return false;
 
-    transfer->DestinationEndpointId = destino;
-    transfer->OriginEndpointId = origem;
+    transfer->DestinationEndpointId = EndpointDestino;
+    transfer->OriginEndpointId = EndpointOrigem;
 
     return true;
 }
 
 void DestroiTransfer (struct Transfer *transfer) {
+    if(!transfer) return;
+    
+    if(transfer->TransferId) free(transfer->TransferId);
     if(transfer) free(transfer);
-    transfer = NULL;
 }

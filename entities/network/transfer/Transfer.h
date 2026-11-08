@@ -21,9 +21,9 @@ struct Transfer
    // id da transferencia intermediária [id da mensagem][destinatario temp][remetente temp]
     char *TransferId;
     // id do destinatario da transferencia (pode ser o mesmo do bastão ou intermediário)
-    struct EndpointDto DestinationEndpointId;
+    int DestinationEndpointId;
     // id do origem da transferencia (pode ser o mesmo do bastão ou intermediário)
-    struct EndpointDto OriginEndpointId;
+    int OriginEndpointId;
     // matriz dinamica de caminhos disponíveis entre os endpoints
     uint8_t AvailablePaths[TOTAL_ENDPOINTS][TOTAL_ENDPOINTS];
     // versão da matriz (ajuda identificar mudanças)
@@ -34,11 +34,13 @@ struct Transfer
 
 // A transferencia é criada, a principio, com os dados de destiono e origem iguais
 // aos da mensagem, depois, quando retrans, ai sim alterar para as maquinas seleciondas
-struct Transfer *CreateTransfer (const char *transferId, struct EndpointDto origin, struct EndpointDto destino);
+struct Transfer *CreateTransfer(char *transferId, int Endpointorigin, int EndpointDest, uint8_t paths[TOTAL_ENDPOINTS][TOTAL_ENDPOINTS], int pathVersion, enum TransferState state);
+
+struct Transfer *CreateAndInitTransfer (const char *transferId, int EndpointOrigin, int EndpointDestino);
 
 // no update só alteramos origem e destino da retransmissão
 // transfer id fica o mesmo (é usado controlID no transferID)
-bool UpdateTransfer (struct Transfer *transfer, struct EndpointDto origem, struct EndpointDto destino);
+bool UpdateTransfer (struct Transfer *transfer, int EndpointOrigem, int EndpointDestino);
 
 void DestroiTransfer (struct Transfer *transfer);
 // por enquanto não vou mexer nas matrizes ***
