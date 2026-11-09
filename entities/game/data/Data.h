@@ -4,8 +4,9 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "../bet/Bet.h"
-#include "../../../config/networkDefs.h";
+#include "../../../config/networkDefs.h"
 
 enum Event{
     INIT,
@@ -38,6 +39,8 @@ struct Data
     // aqueles que perderam tem premio = 0
     struct BetDto Reward[TOTAL_ENDPOINTS];
 };
+
+void LoggerData(struct Data *data);
 
 // preencher bets automaticamente com valor 0 a partir dos ids das maquinas no networkDefs
 struct Data *CreateData (int round, int maxRound, enum Event event);

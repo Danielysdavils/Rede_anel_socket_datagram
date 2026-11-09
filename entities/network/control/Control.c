@@ -1,8 +1,24 @@
 #include "Control.h"
 #include "../../../config/networkDefs.h"
+#include "../../utils/String.h"
+
+
+char *GenerateControlId(char *messageId, enum Event event, int dest, int or){
+    int len = snprintf(NULL, 0, "%s-%d-%d-%d", messageId, (int)event, or, dest);
+    if(len < 0){
+        printf("[CONTROL] Error calculating controlId leng");
+        return NULL;
+    }
+
+    char *id = malloc((size_t)len+1);
+    if(!id) return NULL;
+
+    snprintf(id, (size_t)len+1, "%s-%d-%d-%d", messageId, (int)event, or, dest);
+    return id;
+}
 
 // É usado para identificar uma transferencia do 'bastão lógico'
-struct Control *CreateAndInitControl (int messageId, int originId, int destinationId) {
+struct Control *CreateAndInitControl (char *messageId, enum Event event, int originId, int destinationId) {
     struct Control *control = calloc(1, sizeof(struct Control));
     if (!control) {
         printf("[CONTROL_ERROR]: Error in CreateControl function. Creating malloc");
@@ -11,28 +27,24 @@ struct Control *CreateAndInitControl (int messageId, int originId, int destinati
 
     // gera o id do controle
     // sempre corresponderá ao id da mensagem, origem e destino
-    int result = snprintf(control->ControlId, sizeof(control->ControlId), "%d-%d-%d", messageId, originId, destinationId);
-    if(result < 0) {
-        printf("[CONTROL_ERROR]: Error creating controlId");
+    control->ControlId = GenerateControlId(messageId, event, destinationId, originId);
+    if(!control->ControlId){
+        free(control);
         return NULL;
     }
 
-    if(result >= sizeof(control->ControlId)){
-        printf("[CONTROL_WARNING]: ID Truncated. Maybe will need increase charId limit");
-    }
-
-    control->State = WAITING;
+    control->State = CONTROL_WAITING;
     return control;
 }
 
-struct Control *CreateControl (char *controlID, ControlState state) {
+struct Control *CreateControl (char *controlID, enum ControlState state) {
     struct Control *control = calloc(1, sizeof(struct Control));
     if (!control) {
         printf("[CONTROL_ERROR]: Error in CreateControl function. Creating malloc");
         return NULL;
     }
 
-    control->ControlId = strdup(controlID);
+    control->ControlId = DuplicateString(controlID);
     if(!control->ControlId){
         free(control);
         return NULL;
@@ -43,18 +55,21 @@ struct Control *CreateControl (char *controlID, ControlState state) {
 }
 
 void MarkProccessed (struct Control *control) {
-    control->State = PROCCESSED;
+    control->State = CONTROL_PROCCESSED;
 }
 
 void MarkProccessedError (struct Control *control) {
-    control->State = PROCCESSED_WITH_ERROR;
+    control->State = CONTROL_PROCCESSED_WITH_ERROR;
 }
 
 void DestroyControl (struct Control *control) {
     if(!control) return;
 
+    printf("free control id \n");
     if(control->ControlId) free(control->ControlId);
+    printf("free control \n");
     if(control) free(control);
+    printf("control free \n");
 }
 
 bool CompareControl (const char *controlA, const char *controlB){

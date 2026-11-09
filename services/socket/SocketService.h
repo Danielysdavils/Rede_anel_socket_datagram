@@ -5,6 +5,10 @@
 #include "../../entities/utils/Response.h"
 #include "../../entities/network/network/Network.h"
 #include "../../entities/network/message/Message.h"
+#include "../../entities/network/endpoint/Endpoint.h"
+
+
+int GetServerSocket(void);
 
 struct Response CreatingServer(struct Network *network);
 

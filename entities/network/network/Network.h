@@ -2,6 +2,7 @@
 #define __NETWORK__
 
 #include <stdio.h>
+#include <stdlib.h>
 
 struct Network {
     // endereço Ipv4 da maquina

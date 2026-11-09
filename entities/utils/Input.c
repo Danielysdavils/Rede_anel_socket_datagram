@@ -90,7 +90,7 @@ struct InputResponse HandleUserInput(bool *control) {
 
             // converte string a int base 10
             data = strtol(_inputBuffer, &end, 10);
-
+        
             // numero inteiro na janela 0 até maxLimit
             if(errno == ERANGE || end == _inputBuffer
                 || *end != '\0' || data <= 0 || data > _currentInputMaxLimit){
@@ -114,8 +114,9 @@ struct InputResponse HandleUserInput(bool *control) {
         }else {
             // vai preenchendo o buffer a cada it
             if((_inputLength < sizeof(_inputBuffer) - 1) && !_discartingLine){
-                _inputBuffer[_inputLength++] = charactere;
-
+                _inputBuffer[_inputLength] = charactere;
+                _inputLength++;
+  
             }else{
                 // primeira chamada
                 if(!_discartingLine)

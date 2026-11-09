@@ -4,27 +4,28 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "../../../config/networkDefs.h"
+#include "../../game/data/Data.h"
 
-typedef enum {
-    PROCCESSED, // mensagem correta e recebida com sucesso
-    WAITING, // mensagem é criada com esse estado inicial "aguardando resposta"
-    PROCCESSED_WITH_ERROR // a mensagem chegou com algum problema
-
-} ControlState;
+enum ControlState {
+    CONTROL_PROCCESSED, // mensagem correta e recebida com sucesso
+    CONTROL_WAITING, // mensagem é criada com esse estado inicial "aguardando resposta"
+    CONTROL_PROCCESSED_WITH_ERROR // a mensagem chegou com algum problema
+};
 
 // especifico para processos de bastão
 struct Control {
     char *ControlId; // [id da mensagem]-[destinatario]-[remetente]
-    ControlState State;
+    enum ControlState State;
 };
 
 // compara dois id e verifica se são iguais
 bool CompareControl (const char *controlA, const char *controlB);
 
-struct Control *CreateAndInitControl (int messageId, int originId, int destinationId);
+struct Control *CreateAndInitControl (char *messageId, enum Event event, int originId, int destinationId);
 
-struct Control *CreateControl (char *controlID, ControlState state);
+struct Control *CreateControl (char *controlID, enum ControlState state);
 
 void MarkProccessed (struct Control *control);
 

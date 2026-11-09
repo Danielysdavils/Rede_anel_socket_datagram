@@ -11,7 +11,7 @@
 // Dto simples para identificar dados do destinatario/origem da mensagem
 struct EndpointDto {
     int EndpointID;
-    const char *Ip;
+    char *Ip;
     int Port;
 };
 
@@ -33,7 +33,11 @@ struct Endpoint
     struct Storage *Storage;
 };
 
-struct Endpoint* CreateAndPrepareEndpoint ();
+void LoggerEndpoint(struct Endpoint *endpoint);
+
+struct EndpointDto GetEndpointConfig(int endpointId);
+
+struct Endpoint* CreateAndPrepareEndpoint (int localID);
 
 void DestroyEndpoint (struct Endpoint *endpoint);
 

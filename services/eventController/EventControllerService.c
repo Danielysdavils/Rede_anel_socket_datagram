@@ -10,9 +10,14 @@
 #include "../../entities/game/player/Player.h"
 #include "../../entities/network/message/Message.h"
 #include "../../entities/game/server/Server.h"
-#include "../../entities/game/data/Data.h";
+#include "../../entities/game/data/Data.h"
 #include "../../entities/network/transfer/Transfer.h"
 
+
+enum Event GetNextEvent(enum Event currentEvent){
+    // contador circular que reinicia após os 4 valores possíveis
+    return (enum Event)(((int)currentEvent + 1) % 4);
+}
 
 struct EventController *CreateEventController() {
     struct EventController * ev = malloc(sizeof(struct EventController));
@@ -44,7 +49,7 @@ bool RunEventController (struct Endpoint *endpoint) {
         return false;
     }
 
-    int connected_socket = (int)re.Data;
+    int connected_socket = GetServerSocket();
     struct pollfd fds[2] = {
         { .fd = connected_socket, .events = POLLIN }, // descritor para ev do socket
         { .fd = STDIN_FILENO, .events = POLLIN } // descritor para entradas do usuário
@@ -151,7 +156,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                             ctr->CurrentEvent = INIT;
 
                             // crio o id apontando para esse mesmo endpoint
-                            newMessageId = GenerateId(ctr->currentRound, endpoint->Id);
+                            newMessageId = GenerateMessageId(ctr->currentRound, endpoint->Id);
                             server->LocalRound++;
                         }
                         // terminou a rodada e terminei minhas rodadas máximas do servidor
@@ -166,7 +171,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                             ctr->currentRound++;
                             ctr->CurrentEvent = INIT;
 
-                            newMessageId = GenerateId(ctr->currentRound, endpoint->EndpointNext);
+                            newMessageId = GenerateMessageId(ctr->currentRound, endpoint->EndpointNext);
                             messageOwner = endpoint->EndpointNext;
 
                             // Como deixo de ser servidor
@@ -194,7 +199,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                         int retry = 0;
 
                         // nenhuma transferencia por enquanto, então dest e or = aos da mensagem
-                        struct Message *newMessage = CreateMessage(newMessageId,messageOwner,retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, data);
+                        struct Message *newMessage = CreateMessage(newMessageId,messageOwner,retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, data, data->Event);
                         if(newMessage == NULL){
                             // trato err
                         }else{
@@ -239,7 +244,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                                     // trata erro
                                 }
                                 int retry = 0;
-                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, retry, endpoint, endpoint->EndpointNext, endpoint->EndpointPrevious, DATA, message->Data);
+                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, message->Data, message->Data->Event);
                                 if(newMessage == NULL){
 
                                 }else{
@@ -275,7 +280,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                                 }
 
                                 int retry = 0;
-                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, message->Data);
+                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, message->Data, message->Data->Event);
                                 if(newMessage == NULL){
                                     // tratar
                                 }else{
@@ -297,7 +302,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                             } case END: {
                                 int retry = 0;
                                 // só notifica o usuário que terminou
-                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, message->Data);
+                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, message->Data, message->Data->Event);
                                 if(newMessage == NULL){
                                     // tratar com retry?? (!)
                                 
@@ -366,6 +371,7 @@ bool RunEventController (struct Endpoint *endpoint) {
             // aqui chegam todas as entradas do usuário
             // importante distruibuir respostas e executar ações conforme resposta
             struct InputResponse response = HandleUserInput(&ctr->IsWaitingInput);
+            
             if(response.data < 0) {
                 printf("[RUN_ERRO] Erro ao ler entrada do usuário");
                 // adicionar uma outra tentativa ? da mesma pergunta ? 
@@ -375,6 +381,7 @@ bool RunEventController (struct Endpoint *endpoint) {
             }else if (response.data > 0){
                 switch (response.event) {
                     case SERVER_ASK_ROUNDS: {
+                        printf("[CURRENT] SERVER_ACK_ROUNDS \n");
                         // cria mensagem 
                         // manda bastão
                         // aqui sempre é primeiro bastão desse servidor
@@ -382,26 +389,47 @@ bool RunEventController (struct Endpoint *endpoint) {
 
                         ctr->MaxRounds = response.data;
 
+                        printf("[RUN]: Gerando seu data \n");
                         struct Data *data = CreateData(ctr->currentRound, ctr->MaxRounds, ctr->CurrentEvent);
-                        char *messageId = GenerateId(ctr->currentRound, endpoint->Id);
-                        int retry = 0;
+                        if(!data){
+                            printf("[RUN_ERRO] Erro ao criar data");
+                            endWithoutErro = false;
+                        }
 
-                        struct Message *msm = CreateMessage(messageId, endpoint->Id, retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, data);
-                        if(msm == NULL){
+                        // debbug
+                        LoggerData(data);
+
+                        printf("[RUN]: Gerando sua mensagem! \n");
+                        char *messageId = GenerateMessageId(ctr->currentRound, endpoint->Id);
+                        if(!messageId){
+                            endWithoutErro = true;
+                            break;
+                        }
+
+                        int retry = 0;
+                        struct Message *msm = CreateMessage(messageId, endpoint->Id, retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, data, data->Event);
+                        if(!msm){
                             // errp
+                            printf("[RUN_ERROR]: Creating message! %s", messageId);
                             DestroiData(data);
                             endWithoutErro = false;
                             break;
                             
                         }else{
+                            LogMessage(msm);
+
                             re = SendMessage(msm);
                             if(!re.State){
+                                printf("[RUN_ERROR]: %s \n", re.Message);
                                 // tenta novamente?
                             }else
-                                printf("[RUN] Message enviada com sucesso %s", msm->Id);
+                                printf("[RUN] Message enviada com sucesso %s\n", msm->Id);
                         }
                         
+                        printf("[RUN]: Destroy sended message. \n");
                         DestroiMessage(msm);
+
+                        printf("[RUN]: Message cleaned \n");
                         break;
                     
                     } case SERVER_FINISH_ROUND: {
@@ -421,8 +449,11 @@ bool RunEventController (struct Endpoint *endpoint) {
                         
                         // gera mensagem
                         // manda bastão 
+                        int retry = 0;
                         struct Data *data = GeneratePlayerData(_temporaryMessage->Data, player);
-                        struct Message *msm = UpdateMessage(_temporaryMessage, endpoint, DATA, data);
+                        struct Message *msm = CreateMessage(_temporaryMessage->Id, _temporaryMessage->OwnerId, retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, data, data->Event);
+                        //struct Message *msm = UpdateMessage(_temporaryMessage, retry, endpoint, DATA, endpoint->EndpointNext, endpoint->Id, data);
+
                         if(msm == NULL){
 
                         }else {
@@ -450,6 +481,7 @@ bool RunEventController (struct Endpoint *endpoint) {
         }
     }
 
+    printf("[RUN]: Cleanign all data \n");
     // clear data
     if (player) DestroiPlayer(player);
     if (server) DestroiServer (server);
@@ -467,8 +499,12 @@ bool RunEventController (struct Endpoint *endpoint) {
     return endWithoutErro;
 }
 
-
+void DestroiEventController (struct EventController *ctr) {
+    if(!ctr) return;
+    free(ctr);
+}
 
 void StopEventController (struct Endpoint *endpoint) {
-
+    if(!endpoint) return;
+    free(endpoint);
 }

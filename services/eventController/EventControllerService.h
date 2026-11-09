@@ -2,7 +2,7 @@
 #define __EVENTCONTROLLERSERVICE__
 
 #include <stdbool.h>
-#include "../../entities/network/endpoint/Endpoint.h";
+#include "../../entities/network/endpoint/Endpoint.h"
 #include "../../config/gameDefs.h"
 #include "../../entities/game/data/Data.h"
 

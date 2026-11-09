@@ -7,10 +7,10 @@
 
 
 enum TransferState{
-    WAITING,
-    RECEIVED,
-    ERROR, 
-    SENDED,
+    TRANSFER_WAITING,
+    TRASNFER_RECEIVED,
+    TRANSFER_ERROR, 
+    TRANSFER_SENDED,
 };
 
 struct Transfer

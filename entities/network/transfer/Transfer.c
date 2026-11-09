@@ -1,4 +1,7 @@
 #include "Transfer.h"
+#include "../../utils/String.h"
+
+
 
 struct Transfer *CreateAndInitTransfer (const char *transferId, int EndpointOrigin, int EndpointDestino) {
     struct Transfer *transfer = calloc(1, sizeof(struct Transfer));
@@ -19,14 +22,15 @@ struct Transfer *CreateAndInitTransfer (const char *transferId, int EndpointOrig
         }
     }
 
-    transfer->PathVersion = 1;
-    if(transferId == NULL){
-        printf("[TRANSFER_ERROR] Transfer id cant be a null value!");
+    transfer->TransferId = DuplicateString(transferId);
+    if(!transfer->TransferId){
+        printf("[TRANSFER_ERROR] Transfer id error duplicaring!");
+        free(transfer);
         return NULL;
     }
 
-    transfer->TransferId = transferId;
-    transfer->Status = WAITING;
+    transfer->PathVersion = 1;
+    transfer->Status = TRANSFER_WAITING;
     return transfer;
 }
 
@@ -42,8 +46,9 @@ struct Transfer *CreateTransfer(char *transferId, int EndpointOrigin, int Endpoi
         return NULL;
     }
 
-    transfer->TransferId = strdup(transferId);
+    transfer->TransferId = DuplicateString(transferId);
     if (!transfer->TransferId) {
+        printf("[TRANSFER_ERROR] Transfer id error duplicaring!");
         free(transfer);
         return NULL;
     }

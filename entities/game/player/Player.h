@@ -1,11 +1,16 @@
 #ifndef __PLAYER__
 #define __PLAYER__
 
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdio.h>
 #include "../data/Data.h"
 
 struct Player{
     int playerId; // mesmo do endpoint
     struct Bet Bet;
+    int totalReward;
 };
 
 // retorna resposta do player dependendo do evento

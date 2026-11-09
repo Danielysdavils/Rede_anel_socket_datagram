@@ -38,7 +38,7 @@ struct EndpointDto GetEndpointConfig(int endpointId){
 }
 
 
-struct Endpoint* CreateAndPrepareEndpoint (){
+struct Endpoint* CreateAndPrepareEndpoint (int localID){
     struct Endpoint *endpoint = malloc(sizeof(struct Endpoint));
     if (!endpoint) {
         printf("[ENDPOINT_ERROR]: Error in CreateEndpoint function. Creating malloc");
@@ -46,31 +46,32 @@ struct Endpoint* CreateAndPrepareEndpoint (){
     }
 
     // recupero meus dados locais
-    struct EndpointDto local = GetEndpointConfig(LOCAL_ID);
+    struct EndpointDto local = GetEndpointConfig(localID);
 
     endpoint->Id = local.EndpointID;
+  
     // primeira maquina sempre começa como server
     endpoint->IsServer = endpoint->Id == 0 ? true : false;
 
     int nextId = 0;
     int previousId = 0;
     if(endpoint->Id == 0){
-        nextId = endpoint->Id++;
+        nextId = endpoint->Id + 1;
         previousId = TOTAL_ENDPOINTS - 1;
 
         endpoint->EndpointNext = nextId;
         endpoint->EndpointPrevious = previousId;
-    
+
     }else if(endpoint->Id == TOTAL_ENDPOINTS - 1){
         nextId = 0;
-        previousId = endpoint->Id--;
+        previousId = endpoint->Id - 1;
 
         endpoint->EndpointNext = nextId;        
         endpoint->EndpointPrevious = previousId;
     
     }else{
-        nextId = endpoint->Id++;
-        previousId = endpoint->Id--;
+        nextId = endpoint->Id + 1;
+        previousId = endpoint->Id - 1;
 
         endpoint->EndpointNext = nextId;
         endpoint->EndpointPrevious = previousId;
@@ -89,6 +90,7 @@ struct Endpoint* CreateAndPrepareEndpoint (){
         return NULL;
     }
 
+    endpoint->Network = net;
     endpoint->Storage = storage;
     endpoint->enabled = true;
 
@@ -105,3 +107,12 @@ void DestroyEndpoint (struct Endpoint *endpoint) {
     free(endpoint);
 }
 
+void LoggerEndpoint(struct Endpoint *endpoint){
+    printf("[LOGGER_ENDPOINT]: Endpoint ID %d \n", endpoint->Id);
+    printf("[LOGGER_ENDPOINT]: Endpoint Enable %d \n", endpoint->enabled);
+    printf("[LOGGER_ENDPOINT]: Endpoint Next %d \n", endpoint->EndpointNext);
+    printf("[LOGGER_ENDPOINT]: Endpoint Previous %d \n", endpoint->EndpointPrevious);
+    printf("[LOGGER_ENDPOINT]: Endpoint IsServer %d \n", endpoint->IsServer);
+    printf("[LOGGER_ENDPOINT]: Endpoint Ip %s \n", endpoint->Network->Ip);
+    printf("[LOGGER_ENDPOINT]: Endpoint Port %d \n", endpoint->Network->Port);
+}

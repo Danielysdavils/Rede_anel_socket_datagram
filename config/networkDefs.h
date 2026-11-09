@@ -14,20 +14,20 @@
 // Identificador global para cada máquina
 
 #define A_ID 0
-#define A_PORT 8080
-#define A_IP "172.16.2.120"
+#define A_PORT 5000
+#define A_IP "127.0.0.1"
 
 #define B_ID 1
-#define B_PORT 8081
-#define B_IP "172.16.2.120"
+#define B_PORT 5001
+#define B_IP "127.0.0.1"
 
 #define C_ID 2
-#define C_PORT 8082
-#define C_IP "172.16.2.120"
+#define C_PORT 5002
+#define C_IP "127.0.0.1"
 
 #define D_ID 3
-#define D_PORT 8083
-#define D_IP "172.16.2.120"
+#define D_PORT 5003
+#define D_IP "127.0.0.1"
 
 
 // SOCKET BUFFER

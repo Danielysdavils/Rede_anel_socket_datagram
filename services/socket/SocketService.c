@@ -9,30 +9,38 @@
 
 #include "./SocketService.h"
 
-static int server_fd = -1;
-static int connected_socket = -1;
+static int udp_socket = -1;
+
+int GetServerSocket(void){
+    return udp_socket;
+}
+
+void StopConnection() {
+    if(udp_socket >= 0) close(udp_socket);
+}
 
 struct Response CreatingServer(struct Network *network) {
+    printf("[RUN]: Creating server socket \n");
     struct Response response;
 
-    if(server_fd >= 0){
+    if(udp_socket >= 0){
         // mostra erro porém não fecha server
-        ResponseError(&response, "[Error]: an existent server found");
+        ResponseError(&response, "[Error]: an existent server found \n");
         return response;
     }
 
     struct sockaddr_in address = {0};
     int opt = 1;
 
-    if ((server_fd = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK, 0)) < 0) {
-        ResponseError(&response, "[Socket]: Error creating");
-        StopServer();
+    if ((udp_socket = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK, 0)) < 0) {
+        ResponseError(&response, "[Socket]: Error creating \n");
+        StopConnection();
         return response;
     }
 
-    if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))){
-        ResponseError(&response, "[Socket]: Error set socket opt");
-        StopServer();
+    if(setsockopt(udp_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))){
+        ResponseError(&response, "[Socket]: Error set socket opt \n");
+        StopConnection();
         return response;
     }
 
@@ -40,25 +48,33 @@ struct Response CreatingServer(struct Network *network) {
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(network->Port);
 
-    if(bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0){
-        ResponseError(&response, "[Socket]: Error bind");
-        StopServer();
+    if(bind(udp_socket, (struct sockaddr*)&address, sizeof(address)) < 0){
+        ResponseError(&response, "[Socket]: Error bind \n");
+        StopConnection();
         return response;
     }
 
-    response.Message = "[Socket]: Server created successfully!";
+    response.Message = "[Socket]: Server created successfully! \n";
     response.State = true;
-    response.Data = connected_socket;
 
     return response;
 }
 
 struct Response SendMessage(struct Message *message) {
-    struct Response response;
+    struct Response response = {0};
+
+    printf("connected socjet %d \n", udp_socket);
+
+    if(!message || udp_socket < 0){
+        ResponseError(&response, "[ERROR]: Invalid message or socket");
+        return response;
+    }
+
     struct sockaddr_in destination = {0};
-    
-    int destination_port = message->Destination.Port;
-    int destination_ip = message->Destination.Ip;
+
+    struct EndpointDto dest = GetEndpointConfig(message->DestinationId);
+    uint16_t destination_port = (uint16_t)dest.Port;
+    char *destination_ip = dest.Ip;
 
     destination.sin_family = AF_INET;
     destination.sin_port = htons(destination_port);
@@ -71,16 +87,16 @@ struct Response SendMessage(struct Message *message) {
     uint8_t data[TAM_BUFFER];
     size_t capacity = sizeof(data);
 
-    size_t lenght;
-
     size_t len = EncodeMessage(message, data, capacity);
-    if(len <= 0 || data == NULL){
+    if(len <= 0){
         ResponseError(&response, "[ERROR]: Failed to encode message");
         return response;
     }
 
+    printf("[SOCKET] Message size: %zu / %d bytes\n", len, TAM_BUFFER);
+
     ssize_t sent = sendto(
-        connected_socket,
+        udp_socket,
         data,
         len,
         0,
@@ -94,7 +110,12 @@ struct Response SendMessage(struct Message *message) {
             return response;
         }
 
-        ResponseError(&response, "[ERRO]: In try to send");
+        ResponseError(&response, "[ERROR]: In try to send. Invalid data received");
+        return response;
+    }
+
+    if ((size_t)sent != len) {
+        ResponseError(&response, "[ERROR]: Datagram not fully sent");
         return response;
     }
 
@@ -103,14 +124,20 @@ struct Response SendMessage(struct Message *message) {
 }
 
 struct Response ReceiveMessage() {
-    struct Response response;
-    char buffer[TAM_BUFFER];
+    struct Response response = {0};
+
+    if(udp_socket < 0){
+        ResponseError(&response, "[ERROR]: Invalid socket");
+        return response;
+    }
+
+    uint8_t buffer[TAM_BUFFER];
 
     struct sockaddr_in sender = {0};
     socklen_t senderLenght = sizeof(sender);
 
     ssize_t received = recvfrom(
-        connected_socket,
+        udp_socket,
         buffer,
         sizeof(buffer),
         0,
@@ -120,7 +147,7 @@ struct Response ReceiveMessage() {
 
     if(received < 0){
         if(errno == EAGAIN || errno == EWOULDBLOCK){
-            // nao ha dados disponíveis
+            // nao ha dadtagrama disponíveis
             ResponseAccertData(&response, NULL, CODE_ANY_DATA);
             return response;
         }
@@ -134,7 +161,7 @@ struct Response ReceiveMessage() {
         return response;
     }
 
-    struct Message *data = DecodeMessage(buffer, sizeof(buffer));
+    struct Message *data = DecodeMessage(buffer, (size_t)received);
     if(data == NULL){
         ResponseErrorData(&response, "[ERRO] Error decoding data!", CODE_GENERAL_ERROR);
         return response;
@@ -144,17 +171,9 @@ struct Response ReceiveMessage() {
     return response;    
 }
 
-void StopConnection() {
-    if(connected_socket >= 0) close(connected_socket);
-}
-
-void StopServer() {
-    if(server_fd >= 0) close(server_fd);
-}
 
 void StopAllSocketConnection() {
     StopConnection();
-    StopServer();
 }
 
 

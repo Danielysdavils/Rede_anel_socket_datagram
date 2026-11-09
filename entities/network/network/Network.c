@@ -14,5 +14,6 @@ struct Network* CreateNetwork(char *Ip, int port){
 
 
 void DestroyNetwork(struct Network *net){
-    if(net) free(net);
+    if(!net) return;
+    free(net);
 }

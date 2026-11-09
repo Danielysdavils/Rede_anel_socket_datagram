@@ -1,9 +1,6 @@
 #include "Message.h"
-#include <limits.h>
-#include "../../../config/messageDefs.h"
-#include "../buffer/Writer.h"
-#include "../buffer/Reader.h"
-#include "../control/Control.h"
+#include "../endpoint/Endpoint.h"
+#include "../../utils/String.h"
 
 /**
  * AUX FUNCTIONS:
@@ -37,8 +34,8 @@ bool DecodeBet(struct Buffer *buffer, struct Bet *bet){
     uint8_t type;
     uint32_t value;
 
-    if(!ReaderU8(buffer, (uint8_t)&type)) return false;
-    if(!ReaderU32(buffer, (uint32_t)&value)) return false;
+    if(!ReaderU8(buffer, &type)) return false;
+    if(!ReaderU32(buffer, &value)) return false;
 
     if(type > Pares || value > INT32_MAX)
         return false;
@@ -69,7 +66,7 @@ bool DecodeBetDto(struct Buffer *buffer, struct BetDto *betDto){
     uint8_t playerId;
     struct Bet bet;
     
-    if(!ReaderU8(buffer, (uint8_t)&playerId)) return false;
+    if(!ReaderU8(buffer, &playerId)) return false;
 
     if(!DecodeBet(buffer, &bet)) return false;
 
@@ -118,7 +115,7 @@ bool DecodeBetDto(struct Buffer *buffer, struct BetDto *betDto){
 // }
 
 bool EncodeAvailablePaths(uint8_t paths[TOTAL_ENDPOINTS][TOTAL_ENDPOINTS], struct Buffer *writer){
-    if(paths == NULL || writer == NULL) return;
+    if(paths == NULL || writer == NULL) return false;
 
     if(!Can(writer, BYTE_AVAILABLEPATH)) return false;
 
@@ -171,7 +168,7 @@ bool EncodeTransfer(struct Transfer *transfer, struct Buffer *writer){
     // if(!EncodeEndpointDto(transfer->OriginEndpointId, writer)) return false;
     if(!WriteU8(writer, transfer->OriginEndpointId)) return false;
 
-    if(!EncodeAvailablePaths(transfer->AvailablePaths, writer));
+    if(!EncodeAvailablePaths(transfer->AvailablePaths, writer)) return false;
 
     if(!WriteU8(writer, transfer->PathVersion)) return false;
 
@@ -237,7 +234,7 @@ bool DecodeControl(struct Buffer *buffer, struct Control *control){
     uint8_t state;
     if(!ReaderU8(buffer, &state)) return false;
 
-    control->State = (ControlState)state;
+    control->State = (enum ControlState)state;
     return true;
 }
 
@@ -269,15 +266,15 @@ bool DecodeDtoArray(struct Buffer *buffer, struct BetDto betDtoArray[TOTAL_ENDPO
 bool EncodeData(struct Data *data, struct Buffer *writer){
     if(data == NULL || writer == NULL || writer->buffer == NULL) return false;
 
-    if(data->Round < 0 || data->Round > UINT32_MAX || !WriteU32(writer, data->Round)) return false;
+    if(data->Round < 0 || data->Round > INT32_MAX || !WriteU32(writer, data->Round)) return false;
 
-    if(data->MaxRound < 0 || data->MaxRound > UINT8_MAX || !WriteU8(writer, data->MaxRound)) return false;
+    if(data->MaxRound < 0 || data->MaxRound > INT8_MAX || !WriteU8(writer, data->MaxRound)) return false;
 
     if(data->Event < INIT || data->Event > END || !WriteU8(writer, data->Event)) return false;
 
-    if(!EncodeDtoArray(writer, data->Bets)) return false;
+    if(!EncodeDtoArray(data->Bets, writer)) return false;
 
-    if(!EncodeDtoArray(writer, data->Reward)) return false;
+    if(!EncodeDtoArray(data->Reward, writer)) return false;
 
     return true;
 }
@@ -286,20 +283,15 @@ bool DecodeData(struct Buffer *buffer, struct Data *data){
     if(data == NULL || buffer == NULL || buffer->buffer == NULL) return false;
 
     uint32_t round;
-    if(!ReadU32(buffer, &round)) return false;
-
-    // round é inteiro então para garantir que cabe
-    if(round < 0 || round > INT_MAX) return false;
+    if(!ReaderU32(buffer, &round)) return false;
 
     uint8_t maxRound;
-    if(!ReadU8(buffer, &maxRound)) return false;
-
-    if(maxRound < 0) return false;
+    if(!ReaderU8(buffer, &maxRound)) return false;
 
     uint8_t event;
-    if(!ReadU8(buffer, &event)) return false;
+    if(!ReaderU8(buffer, &event)) return false;
 
-    if(event < INIT || event > END) return false;
+    if(event > END) return false;
 
     if(!DecodeDtoArray(buffer, data->Bets)) return false;
 
@@ -359,7 +351,7 @@ size_t EncodeMessage (struct Message *message, uint8_t *data, size_t capacity) {
 }
 
 struct Message *DecodeMessage (uint8_t *data, size_t capacity) {
-    if(data == NULL || capacity < 0) return NULL;
+    if(data == NULL) return NULL;
 
     struct Buffer reader = {
         .buffer = data,
@@ -368,7 +360,7 @@ struct Message *DecodeMessage (uint8_t *data, size_t capacity) {
     };
 
     uint8_t version;
-    if(!ReadU8(&reader, (uint8_t)&version)){
+    if(!ReaderU8(&reader, &version)){
         printf("[DECODER]: Version not found!");
         return NULL;
     }
@@ -432,15 +424,15 @@ struct Message *DecodeMessage (uint8_t *data, size_t capacity) {
         return NULL;
     }
 
-    struct Data data = {0};
+    struct Data messageData = {0};
     if(haveData == 1){
-        if(!DecodeData(&reader, &data)){
+        if(!DecodeData(&reader, &messageData)){
             printf("[Decoder] Failed into reader data");
             return NULL;
         }
     }
 
-    struct Message *message = CreateDecodeMessage(messageId, retry, type, dest, or, ownerID, &transfer, &control, haveData ? &data : NULL);
+    struct Message *message = CreateDecodeMessage(messageId, retry, type, dest, or, ownerID, &transfer, &control, haveData ? &messageData : NULL);
     if(!message) return NULL;
 
     return message;
@@ -464,7 +456,7 @@ struct Message *CreateDecodeMessage (char *messageId, int messageRetry, enum Mes
     message->DestinationId = dest;
     message->OriginId = ori;
 
-    message->Id = strdup(messageId);
+    message->Id = DuplicateString(messageId);
     if(!message->Id) goto error;
 
     // copia transfer
@@ -497,8 +489,9 @@ struct Message *CreateDecodeMessage (char *messageId, int messageRetry, enum Mes
     - Endpoint para buscar vizinhos próx
     - data sempre atualizado, caso seja type data
     - caso não seja transferencia, destino e origem iguais ao da mensagem
+    - ACKS usam event do parametro para criar control quando data = NULL
 */
-struct Message *CreateMessage (char *messageId, int messageOwner, int retry, struct Endpoint *endpoint, int transferEndpointDest, int transferEndpointOr, enum MessageType type, struct Data *data){
+struct Message *CreateMessage (char *messageId, int messageOwner, int retry, struct Endpoint *endpoint, int transferEndpointDest, int transferEndpointOr, enum MessageType type, struct Data *data, enum Event event){
     if(!endpoint || !messageId) return NULL;
 
     struct Message *message = calloc(1, sizeof(struct Message));
@@ -510,10 +503,10 @@ struct Message *CreateMessage (char *messageId, int messageOwner, int retry, str
     message->DestinationId = endpoint->EndpointNext; // o destino é sempre seu vizinho próx
     message->OriginId = endpoint->Id; // origem ele mesmo 
 
-    message->Id = strdup(messageId);
+    message->Id = DuplicateString(messageId);
     if(!message->Id) goto error;
 
-    message->Control = CreateAndInitControl(messageId, message->OriginId, message->DestinationId);
+    message->Control = CreateAndInitControl(messageId, event, message->OriginId, message->DestinationId);
     if(!message->Control) goto error;
 
     message->Transfer = CreateAndInitTransfer(message->Control->ControlId, transferEndpointOr, transferEndpointDest);
@@ -531,18 +524,35 @@ struct Message *CreateMessage (char *messageId, int messageOwner, int retry, str
         return NULL;
 }
 
-struct Message *UpdateMessage (struct Message *message, struct Endpoint *endpoint, enum MessageType type, struct Data *data){
+// Gera id da mensagem [round]-[endpoint]
+char *GenerateMessageId(int round, int endpointId){
+    int len = snprintf(NULL, 0, "%d-%d", round, endpointId);
+    if(len < 0){
+        printf("[MESSAGE] Error calculating messageId leng");
+        return NULL;
+    }
 
+    char *id = malloc((size_t)len+1);
+    if(!id) return NULL;
+
+    snprintf(id, (size_t)len+1, "%d-%d", round, endpointId);
+    return id;
 }
 
 void DestroiMessage (struct Message *message){
+    printf("free mess \n");
     if(!message) return;
 
+    printf("free message id \n");
     if(message->Id) free(message->Id);
+    printf("free transfer \n");
     if(message->Transfer) DestroiTransfer(message->Transfer);
+    printf("free control \n");
     if(message->Control) DestroyControl(message->Control);
+    printf("free data \n");
     if(message->Data) DestroiData(message->Data);
 
+    printf("free mss \n");
     free(message);
 }
 
@@ -552,13 +562,13 @@ void LogMessage(struct Message *msm){
     printf("[LOGGER] MessageRetry: %d\n", msm->Retry);
     printf("[LOGGER] MessageDestination Id: %d\n", msm->DestinationId);
     printf("[LOGGER] MessageOrigin Id: %d\n", msm->OriginId);
-    printf("[LOGGER] MessageOwner: %d\n", msm->Id);
+    printf("[LOGGER] MessageOwner: %d\n", msm->OwnerId);
     printf("[LOGGER] MessageTransfer Id: %s\n", msm->Transfer->TransferId);
     printf("[LOGGER] MessageTransfer State: %d\n", msm->Transfer->Status);
-    printf("[LOGGER] MessageTransfer Destination Id: %s\n", msm->Transfer->DestinationEndpointId);
-    printf("[LOGGER] MessageTransfer Origin Id: %s\n", msm->Transfer->OriginEndpointId);
-    printf("[LOGGER] MessageTransfer PathVersion: %d\n", msm->Transfer->PathVersion);
-    printf("[LOGGER] MessageControl Id: %s", msm->Control->ControlId);
-    printf("[LOGGER] MessageControl State: %s", msm->Control->State);
+    printf("[LOGGER] MessageTransfer Destination Id: %d\n", msm->Transfer->DestinationEndpointId);
+    printf("[LOGGER] MessageTransfer Origin Id: %d \n", msm->Transfer->OriginEndpointId);
+    printf("[LOGGER] MessageTransfer PathVersion: %d \n", msm->Transfer->PathVersion);
+    printf("[LOGGER] MessageControl Id: %s \n", msm->Control->ControlId);
+    printf("[LOGGER] MessageControl State: %d \n", msm->Control->State);
 }
 

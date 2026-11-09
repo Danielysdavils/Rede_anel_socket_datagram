@@ -2,12 +2,19 @@
 #define __MESSAGE__
 
 #include <stdio.h>
+#include <string.h>
+#include <limits.h>
 
 #include "../../game/data/Data.h"
 #include "../../../config/gameDefs.h"
 #include "../../../config/networkDefs.h"
 #include "../transfer/Transfer.h"
-#include "../endpoint/Endpoint.h"
+#include "../../../config/messageDefs.h"
+#include "../buffer/Writer.h"
+#include "../buffer/Reader.h"
+#include "../control/Control.h"
+
+struct Endpoint;
 
 /* data = bastão; ACK = info */
 enum MessageType {
@@ -43,16 +50,20 @@ struct Message {
     struct Data *Data;
 };
 
+void LogMessage(struct Message *msm);
+
+char *GenerateMessageId(int round, int endpointId);
+
 size_t EncodeMessage (struct Message *message, uint8_t *data, size_t capacity);
 
 struct Message *DecodeMessage (uint8_t *data, size_t capacity);
 
-struct Message *CreateMessage (char *messageId, int messageOwner, int retry, struct Endpoint *endpoint, int transferEndpointDest, int transferEndpointOr, enum MessageType type, struct Data *data);
+struct Message *CreateMessage (char *messageId, int messageOwner, int retry, struct Endpoint *endpoint, int transferEndpointDest, int transferEndpointOr, enum MessageType type, struct Data *data, enum Event event);
 
 struct Message *CreateDecodeMessage (char *messageId, int messageRetry, enum MessageType type, int dest, int ori, int messageOwnerId, struct Transfer *transfer, struct Control *control, struct Data *data);
 
 // cria uma nova mensagem a partir da antiga (atualiza, porém cria registro novo apartir do velho)
-struct Message *UpdateMessage (struct Message *message, struct Endpoint *endpoint, enum MessageType type, struct Data *data);
+struct Message *UpdateMessage (struct Message *message, int retry, struct Endpoint *endpoint, enum MessageType type, int transferEndpointDest, int transferEndpointOr, struct Data *data);
 
 void DestroiMessage (struct Message *message);
 
