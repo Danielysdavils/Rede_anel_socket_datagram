@@ -93,7 +93,7 @@ struct Response SendMessage(struct Message *message) {
         return response;
     }
 
-    printf("[SOCKET] Message size: %zu / %d bytes\n", len, TAM_BUFFER);
+    printf("[SOCKET] Message to SEND size: %zu / %d bytes\n", len, TAM_BUFFER);
 
     ssize_t sent = sendto(
         udp_socket,
@@ -127,7 +127,7 @@ struct Response ReceiveMessage() {
     struct Response response = {0};
 
     if(udp_socket < 0){
-        ResponseError(&response, "[ERROR]: Invalid socket");
+        ResponseError(&response, "[ERROR]: Invalid socket \n");
         return response;
     }
 
@@ -148,22 +148,25 @@ struct Response ReceiveMessage() {
     if(received < 0){
         if(errno == EAGAIN || errno == EWOULDBLOCK){
             // nao ha dadtagrama disponíveis
+            printf("[SOCKET]: ANY DATAGRAM \n");
             ResponseAccertData(&response, NULL, CODE_ANY_DATA);
             return response;
         }
 
-        ResponseErrorData(&response, "[ERRO]: Erro no recvfrom", CODE_GENERAL_ERROR);
+        ResponseErrorData(&response, "[ERRO]: Erro no recvfrom \n", CODE_GENERAL_ERROR);
         return response;
     }
 
     if(received == 0){
-        ResponseErrorData(&response, "[ERRO] Datagram empty", CODE_ANY_DATA);
+        ResponseErrorData(&response, "[ERRO] Datagram empty \n", CODE_ANY_DATA);
         return response;
     }
 
+    printf("[SOCKET] Message RECEIVED size: %zu / %d bytes\n", (size_t)received, TAM_BUFFER);
+
     struct Message *data = DecodeMessage(buffer, (size_t)received);
     if(data == NULL){
-        ResponseErrorData(&response, "[ERRO] Error decoding data!", CODE_GENERAL_ERROR);
+        ResponseErrorData(&response, "[ERRO] Error decoding data! \n", CODE_GENERAL_ERROR);
         return response;
     }
 

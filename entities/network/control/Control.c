@@ -64,12 +64,8 @@ void MarkProccessedError (struct Control *control) {
 
 void DestroyControl (struct Control *control) {
     if(!control) return;
-
-    printf("free control id \n");
     if(control->ControlId) free(control->ControlId);
-    printf("free control \n");
-    if(control) free(control);
-    printf("control free \n");
+    free(control);
 }
 
 bool CompareControl (const char *controlA, const char *controlB){

@@ -21,7 +21,7 @@ void ResponseAccert(struct Response *response, char *msm) {
 
 void ResponseAccertData(struct Response *response, void *data, int code) {
     response->State = true;
-    response->Code = CODE_GENERAL_ACCERT;
+    response->Code = code;
     response->Data = data;
 }
 

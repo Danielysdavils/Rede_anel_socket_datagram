@@ -540,19 +540,13 @@ char *GenerateMessageId(int round, int endpointId){
 }
 
 void DestroiMessage (struct Message *message){
-    printf("free mess \n");
     if(!message) return;
 
-    printf("free message id \n");
     if(message->Id) free(message->Id);
-    printf("free transfer \n");
     if(message->Transfer) DestroiTransfer(message->Transfer);
-    printf("free control \n");
     if(message->Control) DestroyControl(message->Control);
-    printf("free data \n");
     if(message->Data) DestroiData(message->Data);
 
-    printf("free mss \n");
     free(message);
 }
 
