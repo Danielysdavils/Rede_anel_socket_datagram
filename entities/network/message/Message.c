@@ -270,7 +270,7 @@ bool EncodeData(struct Data *data, struct Buffer *writer){
 
     if(data->MaxRound < 0 || data->MaxRound > INT8_MAX || !WriteU8(writer, data->MaxRound)) return false;
 
-    if(data->Event < INIT || data->Event > END || !WriteU8(writer, data->Event)) return false;
+    if(data->Event < INIT || data->Event > FINISH_EVENT || !WriteU8(writer, data->Event)) return false;
 
     if(!EncodeDtoArray(data->Bets, writer)) return false;
 
@@ -291,7 +291,7 @@ bool DecodeData(struct Buffer *buffer, struct Data *data){
     uint8_t event;
     if(!ReaderU8(buffer, &event)) return false;
 
-    if(event > END) return false;
+    if(event > FINISH_EVENT) return false;
 
     if(!DecodeDtoArray(buffer, data->Bets)) return false;
 

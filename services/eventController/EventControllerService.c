@@ -86,8 +86,9 @@ bool RunEventController (struct Endpoint *endpoint) {
     struct PlayerServer *server = NULL;
 
     bool endWithoutErro = true;
+    bool isRun = true;
 
-    while (1) {
+    while (isRun) {
         // para que ignore terminal quando nao há pergunta do usuário
         fds[1].fd = ctr->IsWaitingInput ? STDIN_FILENO : -1;
 
@@ -169,26 +170,40 @@ bool RunEventController (struct Endpoint *endpoint) {
                         }
                         // terminou a rodada e terminei minhas rodadas máximas do servidor
                         else if(message->Data->Event == END && server->LocalRound == ctr->MaxRounds){
-                            // crio nova mensagem com:
-                            //  - novo id, pois é novo inicio de rodada
-                            //  - novo owner, pois há transferencia de servidor
-                            //  - aumento currentRound para gerar message ao prox dono já atualizado
-                            // também:
-                            //  - destruo servidor atual
-                            //  como não uso mais maxRounds posso deixar assim ou zera
-                            ctr->currentRound++;
-                            ctr->CurrentEvent = INIT;
+                            // não sou a última maquina do anel
+                            if(endpoint->Id != TOTAL_ENDPOINTS - 1){
+                                // crio nova mensagem com:
+                                //  - novo id, pois é novo inicio de rodada
+                                //  - novo owner, pois há transferencia de servidor
+                                //  - aumento currentRound para gerar message ao prox dono já atualizado
+                                // também:
+                                //  - destruo servidor atual
+                                //  como não uso mais maxRounds posso deixar assim ou zera
+                                ctr->currentRound++;
+                                ctr->CurrentEvent = INIT;
 
-                            newMessageId = GenerateMessageId(ctr->currentRound, endpoint->EndpointNext);
-                            messageOwner = endpoint->EndpointNext;
+                                newMessageId = GenerateMessageId(ctr->currentRound, endpoint->EndpointNext);
+                                messageOwner = endpoint->EndpointNext;
 
-                            // Como deixo de ser servidor
-                            if(server){
-                                DestroiServer(server);
-                                server = NULL;
+                                // Como deixo de ser servidor
+                                if(server){
+                                    DestroiServer(server);
+                                    server = NULL;
+                                }
+
+                                endpoint->IsServer = false;
                             }
+                            // sou a última maquina do anel
+                            else{
+                                // crio nova mensagem com:
+                                //  - novo id, porém zerado que representa fim do jogo
+                                //  - mudo evento para fim
+                                //  - não destruo servidor ainda - deixo para o final
+                                ctr->currentRound = 0;
+                                ctr->CurrentEvent = FINISH_EVENT;
 
-                            endpoint->IsServer = false;
+                                newMessageId = GenerateMessageId(ctr->currentRound, endpoint->Id);
+                            }
                         } 
                         // só transferencia de evento
                         else if(message->Data->Event != END) {
@@ -210,7 +225,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                         LoggerData(data);
 
                         // nenhuma transferencia por enquanto, então dest e or = aos da mensagem
-                        struct Message *newMessage = CreateMessage(newMessageId,messageOwner,retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, data, data->Event);
+                        struct Message *newMessage = CreateMessage(newMessageId,messageOwner,retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, data, data->Event);;
                         if(!newMessage){
                             // trato err
                             printf("[RUN_ERROR]: Error creting data \n");
@@ -240,6 +255,13 @@ bool RunEventController (struct Endpoint *endpoint) {
                         // mensagem processada, posso destruir
                         DestroiMessage(message);
                         printf("[RUN] Message cleaned! \n");
+
+                        // caso seja a última inicio destruição dela mesma
+                        if(ctr->CurrentEvent == FINISH_EVENT && endpoint->Id == TOTAL_ENDPOINTS - 1){
+                            printf("[RUN] Ending game \n");
+                            isRun = false;
+                            break;
+                        }
                     }
                     // nao sou dono da mensagem sou player, não há transição
                     else if(message->OwnerId != endpoint->Id && !endpoint->IsServer){
@@ -380,6 +402,36 @@ bool RunEventController (struct Endpoint *endpoint) {
                                 printf("[RUN] Cleaning message! \n");
                                 DestroiMessage(message); //(*) tenho q ver
                                 printf("[RUN] message cleaned! \n");
+                                break;
+                            
+                            } case FINISH_EVENT: {
+                                printf("[RUN] PLAYER - FINISH EVENT - FINISH GAME! \n");
+                                int retry = 0;
+
+                                struct Message *newMessage = CreateMessage(message->Id, message->OwnerId, retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, message->Data, ctr->CurrentEvent);
+                                if(!newMessage){
+                                    // tratar com retry?? (!)
+                                    printf("[RUN_ERROR]: Creating new message! \n");
+                                    break;
+                                }
+
+                                printf("[RUN]: Player - Message to send \n");
+                                LogMessage(newMessage);
+
+                                message->Data = NULL;
+
+                                re = SendMessage(newMessage);
+                                if(!re.State){
+                                    // nova ten?
+                                    printf("[RUN_ERROR] %s \n", re.Message);
+                                }else
+                                    printf("[RUN] Sua mensagem foi enviada! %s", newMessage->Id);
+
+                                printf("[RUN] Cleaning new message! \n");
+                                DestroiMessage(newMessage);
+                                printf("[RUN] new message cleaned! \n");
+
+                                isRun = false;
                                 break;
                             }
                         }

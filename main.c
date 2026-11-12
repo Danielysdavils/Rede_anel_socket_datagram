@@ -31,11 +31,10 @@ int main (int argc, char *argv[]) {
 
     printf("[INIT] Iniciando jogada! Aguarde enquanto configuramos a rede...\n");
     if(RunEventController(endpoint))
-        printf("[EXEC] Não conseguimos terminar a jogada! Encerrando programa");
-    
+        printf("[EXEC] Jogada encerrada com exito! Encerrando programa \n");
     else
-        printf("[EXEC] Jogada encerrada com exito! Encerrando programa");
-
+        printf("[EXEC] Não conseguimos terminar a jogada! Encerrando programa \n");
+        
     StopEventController(endpoint);
     return 0; 
 }

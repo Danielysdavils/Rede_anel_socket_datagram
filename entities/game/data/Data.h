@@ -12,7 +12,8 @@ enum Event{
     INIT,
     BET,
     RESULT,
-    END
+    END,
+    FINISH_EVENT
 };
 
 struct BetDto {
