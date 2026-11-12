@@ -108,11 +108,11 @@ void DestroyEndpoint (struct Endpoint *endpoint) {
 }
 
 void LoggerEndpoint(struct Endpoint *endpoint){
-    printf("[LOGGER_ENDPOINT]: Endpoint ID %d \n", endpoint->Id);
-    printf("[LOGGER_ENDPOINT]: Endpoint Enable %d \n", endpoint->enabled);
-    printf("[LOGGER_ENDPOINT]: Endpoint Next %d \n", endpoint->EndpointNext);
-    printf("[LOGGER_ENDPOINT]: Endpoint Previous %d \n", endpoint->EndpointPrevious);
-    printf("[LOGGER_ENDPOINT]: Endpoint IsServer %d \n", endpoint->IsServer);
-    printf("[LOGGER_ENDPOINT]: Endpoint Ip %s \n", endpoint->Network->Ip);
-    printf("[LOGGER_ENDPOINT]: Endpoint Port %d \n", endpoint->Network->Port);
+    printf("[LOGGER]: Endpoint ID %d \n", endpoint->Id);
+    //printf("[LOGGER]: Endpoint Enable %d \n", endpoint->enabled);
+    printf("[LOGGER]: Endpoint Next %d \n", endpoint->EndpointNext);
+    printf("[LOGGER]: Endpoint Previous %d \n", endpoint->EndpointPrevious);
+    printf("[LOGGER]: Endpoint IsServer %d \n", endpoint->IsServer);
+    //printf("[LOGGER]: Endpoint Ip %s \n", endpoint->Network->Ip);
+    printf("[LOGGER: Endpoint Port %d \n", endpoint->Network->Port);
 }

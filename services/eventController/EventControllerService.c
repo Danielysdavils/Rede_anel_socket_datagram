@@ -246,12 +246,12 @@ bool RunEventController (struct Endpoint *endpoint) {
                             }else
                                 printf("[RUN] Message enviada: %s \n", message->Id);
                             
-                            printf("[RUN] Cleaning new message \n");
+                            //printf("[RUN] Cleaning new message \n");
                             DestroiMessage(newMessage);
                             printf("[RUn] new message cleaned! \n");
                         }
                         
-                        printf("[RUN]: Cleaning messge \n");
+                        //printf("[RUN]: Cleaning messge \n");
                         // mensagem processada, posso destruir
                         DestroiMessage(message);
                         printf("[RUN] Message cleaned! \n");
@@ -288,7 +288,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                                     // trata erro
                                 }
 
-                                printf("[RUN]: PLAYER - NOVA DATA GENERATED! EVENT INIT \n");
+                                printf("[RUN]: PLAYER - Data generated: \n");
                                 LoggerData(message->Data);
 
                                 int retry = 0;
@@ -309,12 +309,12 @@ bool RunEventController (struct Endpoint *endpoint) {
                                     }else 
                                         printf("[RUN] Sua mensagem foi enviada! %s \n", newMessage->Id);
 
-                                    printf("[RUN]: Destroy new message! \n");
+                                    //printf("[RUN]: Destroy new message! \n");
                                     DestroiMessage(newMessage);
                                     printf("[RUN]: New message cleaned! \n");
                                 }
                                 
-                                printf("[RUN]: Destroy message! \n");
+                                //printf("[RUN]: Destroy message! \n");
                                 // já processada, pode destruir
                                 DestroiMessage(message);
                                 printf("[RUN]: message cleaned! \n");
@@ -326,7 +326,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                                 // salvo message que irei usar quadno user retornar resposta
                                 _temporaryMessage = message;
                                 // peço dados
-                                AskUserInput("[ENTRY] Qual o tipo de aposta", &ctr->IsWaitingInput, PLAYER_ASK_BET_TYPE, MAX_BET_TYPE);
+                                AskUserInput("[ENTRY] Qual o tipo de aposta \n", &ctr->IsWaitingInput, PLAYER_ASK_BET_TYPE, MAX_BET_TYPE);
                                 // mando mensagem no controle de respostas
                                 break;
 
@@ -339,7 +339,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                                     // retorna?
                                 }
 
-                                printf("[RUN]: Player - DAta generated: \n");
+                                printf("[RUN]: Player - Data generated: \n");
                                 LoggerData(message->Data);
 
                                 int retry = 0;
@@ -361,12 +361,12 @@ bool RunEventController (struct Endpoint *endpoint) {
                                     }else 
                                         printf("[RUN] Sua mensagem foi enviada! %s", newMessage->Id);
 
-                                    printf("[RUN]: Cleaning new message! \n");
+                                    //printf("[RUN]: Cleaning new message! \n");
                                     DestroiMessage(newMessage);
                                     printf("[RUN]: new message cleaned! \n");
                                 }
                                 
-                                printf("[RUN]: Cleaning message! \n");
+                                //printf("[RUN]: Cleaning message! \n");
                                 // já processada, pode destruir
                                 DestroiMessage(message);
                                 printf("[RUN]: message cleaned! \n");
@@ -394,12 +394,12 @@ bool RunEventController (struct Endpoint *endpoint) {
                                     }else
                                         printf("[RUN] Sua mensagem foi enviada! %s", newMessage->Id);
 
-                                    printf("[RUN] Cleaning new message! \n");
+                                    //printf("[RUN] Cleaning new message! \n");
                                     DestroiMessage(newMessage);
                                     printf("[RUN] new message cleaned! \n");
                                 }
                                 
-                                printf("[RUN] Cleaning message! \n");
+                                //printf("[RUN] Cleaning message! \n");
                                 DestroiMessage(message); //(*) tenho q ver
                                 printf("[RUN] message cleaned! \n");
                                 break;
@@ -425,9 +425,9 @@ bool RunEventController (struct Endpoint *endpoint) {
                                     // nova ten?
                                     printf("[RUN_ERROR] %s \n", re.Message);
                                 }else
-                                    printf("[RUN] Sua mensagem foi enviada! %s", newMessage->Id);
+                                    printf("[RUN] Sua mensagem foi enviada! %s \n", newMessage->Id);
 
-                                printf("[RUN] Cleaning new message! \n");
+                                //printf("[RUN] Cleaning new message! \n");
                                 DestroiMessage(newMessage);
                                 printf("[RUN] new message cleaned! \n");
 
@@ -459,7 +459,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                         ctr->CurrentEvent = message->Data->Event;
                         ctr->currentRound = message->Data->Round;
                             
-                        AskUserInput("[Entry] Quantas rodadas deseja realizar?", &ctr->IsWaitingInput, SERVER_ASK_ROUNDS, MAX_ROUNDS_PER_USER);
+                        AskUserInput("[Entry] Quantas rodadas deseja realizar? \n", &ctr->IsWaitingInput, SERVER_ASK_ROUNDS, MAX_ROUNDS_PER_USER);
                         // manda mensagem no controle de respostas
                         // uma nova mensagem é criada, então destruo a anterior
                         DestroiMessage(message);
@@ -495,7 +495,7 @@ bool RunEventController (struct Endpoint *endpoint) {
             }else if (response.data > 0){
                 switch (response.event) {
                     case SERVER_ASK_ROUNDS: {
-                        printf("[CURRENT] SERVER_ACK_ROUNDS \n");
+                        printf("[RUN] SERVER_ACK_ROUNDS \n");
                         // cria mensagem 
                         // manda bastão
                         // aqui sempre é primeiro bastão desse servidor
@@ -503,7 +503,6 @@ bool RunEventController (struct Endpoint *endpoint) {
 
                         ctr->MaxRounds = response.data;
 
-                        printf("[RUN]: Gerando seu data \n");
                         struct Data *data = CreateData(ctr->currentRound, ctr->MaxRounds, ctr->CurrentEvent);
                         if(!data){
                             printf("[RUN_ERRO] Erro ao criar data");
@@ -511,9 +510,9 @@ bool RunEventController (struct Endpoint *endpoint) {
                         }
 
                         // debbug
+                        printf("[RUN]: Data gerado: \n");
                         LoggerData(data);
 
-                        printf("[RUN]: Gerando sua mensagem! \n");
                         char *messageId = GenerateMessageId(ctr->currentRound, endpoint->Id);
                         if(!messageId){
                             endWithoutErro = true;
@@ -529,6 +528,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                             break;
                             
                         }else{
+                            printf("[RUN]: Mensagem gerada: \n");
                             LogMessage(msm);
 
                             re = SendMessage(msm);
@@ -539,10 +539,10 @@ bool RunEventController (struct Endpoint *endpoint) {
                                 printf("[RUN] Message enviada com sucesso %s\n", msm->Id);
                         }
                         
-                        printf("[RUN]: Destroy sended message. \n");
+                        //printf("[RUN]: Destroy sended message. \n");
                         DestroiMessage(msm);
-
                         printf("[RUN]: Message cleaned \n");
+
                         break;
                     
                     } case SERVER_FINISH_ROUND: {
@@ -551,14 +551,14 @@ bool RunEventController (struct Endpoint *endpoint) {
                         break;
                     
                     } case PLAYER_ASK_BET_TYPE: {
-                        printf("[RUN]: PLAYER ASK BET TYPE \n");
+                        printf("[RUN]: PLAYER - ASK BET TYPE \n");
                         // tipo da aposta
                         player->Bet.type = response.data;
-                        AskUserInput("[RUN] Qual o valor da aposta? ", &ctr->IsWaitingInput, PLAYER_ASK_BET_VALUE, MAX_BET_VALUE);
+                        AskUserInput("[RUN] Qual o valor da aposta? \n", &ctr->IsWaitingInput, PLAYER_ASK_BET_VALUE, MAX_BET_VALUE);
                         break;
 
                     } case PLAYER_ASK_BET_VALUE: {
-                        printf("[RUN]: PLAYER ASK BET VALUE \n");
+                        printf("[RUN]: PLAYER - ASK BET VALUE \n");
                         // valor da aposta
                         player->Bet.value = response.data;
                         
@@ -591,12 +591,12 @@ bool RunEventController (struct Endpoint *endpoint) {
                             }else
                                 printf("[RUN] Message envivada com sucesso! %s", msm->Id);
 
-                            printf("[RUN] Cleaning message \n");
+                            //printf("[RUN] Cleaning message \n");
                             DestroiMessage(msm);
                             printf("[RUN] Message cleaned \n");
                         }
 
-                        printf("[RUN] CLeaning temporary message \n");
+                        //printf("[RUN] CLeaning temporary message \n");
                         // destroi o q ta no endereço de temporary, ou seja, message original
                         DestroiMessage(_temporaryMessage);
                         _temporaryMessage = NULL;

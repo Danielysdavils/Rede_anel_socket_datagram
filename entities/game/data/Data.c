@@ -47,15 +47,15 @@ struct Data *CreateData (int round, int maxRound, enum Event event){
 }
 
 void LoggerData(struct Data *data){
-    printf("[DATA]: Data Round %d \n", data->Round);
-    printf("[DATA]: Data MaxRound %d \n", data->MaxRound);
-    printf("[DATA]: Data Event %d \n", data->Event);
-    for(int i = 0; i < TOTAL_ENDPOINTS; i++){
-        printf("[DATA]: Data Bets [%d] = {playerID: %d, BetType: %d, BetValue: %d}\n", i, data->Bets[i].PlayerId, data->Bets[i].Bet.type, data->Bets[i].Bet.value);
-    }
-    for(int i = 0; i < TOTAL_ENDPOINTS; i++){
-        printf("[DATA]: Data Rewards [%d] = {playerID: %d, BetType: %d, BetValue: %d}\n", i, data->Reward[i].PlayerId, data->Reward[i].Bet.type, data->Reward[i].Bet.value);
-    }
+    printf("[LOGGER]: Data Round %d \n", data->Round);
+    printf("[LOGGER]: Data MaxRound %d \n", data->MaxRound);
+    printf("[LOGGER]: Data Event %d \n", data->Event);
+    //for(int i = 0; i < TOTAL_ENDPOINTS; i++){
+    //    printf("[LOGGER]: Data Bets [%d] = {playerID: %d, BetType: %d, BetValue: %d}\n", i, data->Bets[i].PlayerId, data->Bets[i].Bet.type, data->Bets[i].Bet.value);
+    //}
+    //for(int i = 0; i < TOTAL_ENDPOINTS; i++){
+    //    printf("[LOGGER]: Data Rewards [%d] = {playerID: %d, BetType: %d, BetValue: %d}\n", i, data->Reward[i].PlayerId, data->Reward[i].Bet.type, data->Reward[i].Bet.value);
+    //}
 }
 
 void DestroiData (struct Data *data){

@@ -557,11 +557,11 @@ void LogMessage(struct Message *msm){
     printf("[LOGGER] MessageDestination Id: %d\n", msm->DestinationId);
     printf("[LOGGER] MessageOrigin Id: %d\n", msm->OriginId);
     printf("[LOGGER] MessageOwner: %d\n", msm->OwnerId);
-    printf("[LOGGER] MessageTransfer Id: %s\n", msm->Transfer->TransferId);
-    printf("[LOGGER] MessageTransfer State: %d\n", msm->Transfer->Status);
-    printf("[LOGGER] MessageTransfer Destination Id: %d\n", msm->Transfer->DestinationEndpointId);
-    printf("[LOGGER] MessageTransfer Origin Id: %d \n", msm->Transfer->OriginEndpointId);
-    printf("[LOGGER] MessageTransfer PathVersion: %d \n", msm->Transfer->PathVersion);
+    //printf("[LOGGER] MessageTransfer Id: %s\n", msm->Transfer->TransferId);
+    //printf("[LOGGER] MessageTransfer State: %d\n", msm->Transfer->Status);
+    //printf("[LOGGER] MessageTransfer Destination Id: %d\n", msm->Transfer->DestinationEndpointId);
+    //printf("[LOGGER] MessageTransfer Origin Id: %d \n", msm->Transfer->OriginEndpointId);
+    //printf("[LOGGER] MessageTransfer PathVersion: %d \n", msm->Transfer->PathVersion);
     printf("[LOGGER] MessageControl Id: %s \n", msm->Control->ControlId);
     printf("[LOGGER] MessageControl State: %d \n", msm->Control->State);
 }
