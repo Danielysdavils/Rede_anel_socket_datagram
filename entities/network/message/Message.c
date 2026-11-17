@@ -15,12 +15,12 @@
 bool EncodeBet(struct Bet bet, struct Buffer *writer){
     if(writer == NULL) return false;
 
-    if(bet.type < Numero || bet.type > Pares || bet.value < 0) return false;
+    if(bet.type < NUMBER || bet.type > EVEN || bet.type > ODD || bet.tokens < 0) return false;
 
     if(!Can(writer, BYTE_BET)) return false;
 
     if(!WriteU8(writer, (uint8_t)bet.type)) return false;
-    if(!WriteU32(writer, (uint32_t)bet.value)) return false;
+    if(!WriteU32(writer, (uint32_t)bet.tokens)) return false;
     
     return true;
 }
@@ -37,11 +37,11 @@ bool DecodeBet(struct Buffer *buffer, struct Bet *bet){
     if(!ReaderU8(buffer, &type)) return false;
     if(!ReaderU32(buffer, &value)) return false;
 
-    if(type > Pares || value > INT32_MAX)
+    if(type > EVEN || type > ODD || value > INT32_MAX)
         return false;
 
     bet->type = (enum BetType)type;
-    bet->value = (int)value;
+    bet->tokens = (int)value;
 
     return true;
 }

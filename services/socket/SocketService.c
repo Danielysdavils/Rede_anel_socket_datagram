@@ -87,7 +87,7 @@ struct Response SendMessage(struct Message *message) {
     uint8_t data[TAM_BUFFER];
     size_t capacity = sizeof(data);
 
-    size_t len = EncodeMessage(message, data, capacity);
+    ssize_t len = EncodeMessage(message, data, capacity);
     if(len <= 0){
         ResponseError(&response, "[ERROR]: Failed to encode message");
         return response;

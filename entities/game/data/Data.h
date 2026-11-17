@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "../bet/Bet.h"
 #include "../../../config/networkDefs.h"
 
@@ -23,14 +24,12 @@ struct BetDto {
 
 struct Data
 {
-    /* data */
     // rodada: cada rodada é 4 eventos
     int Round;
     // rodadas máximas, é o usuário servidor que escolhe a cada nova jogada
     // importante todas as maquinas souberem a qtd de jogadas que irão fazer
     int MaxRound;
-    // eventos
-    enum Event Event;
+    enum Event Event; // eventos
 
     // array de player de apostas {idPlayer, valor aposta}
     // no caso do player que esteja sendo server valor aposta = 0
@@ -41,12 +40,12 @@ struct Data
     struct BetDto Reward[TOTAL_ENDPOINTS];
 };
 
-void LoggerData(struct Data *data);
-
 // preencher bets automaticamente com valor 0 a partir dos ids das maquinas no networkDefs
 struct Data *CreateData (int round, int maxRound, enum Event event);
 
 struct Data *CreateCompleteData (int round, int maxRound, enum Event event, struct BetDto Bets[TOTAL_ENDPOINTS], struct BetDto Rewards[TOTAL_ENDPOINTS]);
+
+void LoggerData (struct Data *data);
 
 void DestroiData (struct Data *data);
 

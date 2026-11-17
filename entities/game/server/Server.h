@@ -5,20 +5,20 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
+
 #include "../data/Data.h"
+#include "../../../config/gameDefs.h"
 
 struct PlayerServer{
     int ServerId; // mesmo do endpoint
-    
-    // contador de rodadas locais
-    int LocalRound; // inicializar em 1 SEMPRE
-
-    int totalReward;
+    int LocalRound; // contador de rodadas locais
+    int totalReward; // Saldo roleta
 };
 
 struct PlayerServer *CreatePlayerServer (int serverID);
 
-// importante retornar o mesmo objeto do parametro alterado !!!!
+// Servidor realiza as apostas
 struct Data *GenerateServerData (struct Data *data, struct PlayerServer *server); 
 
 void DestroiServer (struct PlayerServer *server);

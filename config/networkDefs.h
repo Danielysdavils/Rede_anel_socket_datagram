@@ -33,8 +33,6 @@
 // SOCKET BUFFER
 #define TAM_BUFFER 1024
 
-#define MAX_RETRYS 10
-
 // timeout máximo para que alguma mensagem seja recebida por qualquer endpoint
 // se uma máquina, após esse tempo, não recebe mensagem alguma
 // se considera morta (fora de rede)

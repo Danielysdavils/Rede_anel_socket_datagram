@@ -154,7 +154,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                         char *newMessageId = message->Id;
                         int messageOwner = message->OwnerId;
 
-                        // Quer dizer que terminou rodada e ainda não cumpli o limite de rodadas do servidor
+                        // Quer dizer que terminou rodada e ainda não cumpri o limite de rodadas do servidor
                         if(message->Data->Event == END && server->LocalRound < ctr->MaxRounds){
                             // crio uma nova mensagem com:
                             //  - novo id, pois é novo inicio de rodada
@@ -554,13 +554,24 @@ bool RunEventController (struct Endpoint *endpoint) {
                         printf("[RUN]: PLAYER - ASK BET TYPE \n");
                         // tipo da aposta
                         player->Bet.type = response.data;
-                        AskUserInput("[RUN] Qual o valor da aposta? \n", &ctr->IsWaitingInput, PLAYER_ASK_BET_VALUE, MAX_BET_VALUE);
+                        if (player->Bet.type == 1){ 
+                            AskUserInput("[RUN] Qual numero (0 a 36)? \n", &ctr->IsWaitingInput, PLAYER_ASK_BET_TIP, 36);
+                        } else {
+                            AskUserInput("[RUN] Quantas fichas vocẽ quer aposta? \n", &ctr->IsWaitingInput, PLAYER_ASK_BET_TOKENS, MAX_BET_VALUE);
+                        }
                         break;
 
-                    } case PLAYER_ASK_BET_VALUE: {
+                    } case PLAYER_ASK_BET_TIP: {
+                        printf("[RUN]: PLAYER - ASK BET TIP \n");
+                        // tipo da aposta numero
+                        player->Bet.betTip = response.data;
+                        AskUserInput("[RUN] Quantas fichas vocẽ quer aposta? \n", &ctr->IsWaitingInput, PLAYER_ASK_BET_TOKENS, MAX_BET_VALUE);
+                        break;
+
+                    } case PLAYER_ASK_BET_TOKENS: {
                         printf("[RUN]: PLAYER - ASK BET VALUE \n");
                         // valor da aposta
-                        player->Bet.value = response.data;
+                        player->Bet.tokens = response.data;
                         
                         // gera mensagem
                         // manda bastão 

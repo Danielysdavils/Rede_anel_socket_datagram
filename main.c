@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "./entities/utils/Response.h"
 #include "./entities/network/endpoint/Endpoint.h"
 #include "./services/eventController/EventControllerService.h"
@@ -9,6 +10,7 @@ int main (int argc, char *argv[]) {
      * PARA TESTE LOCAL !!
      *  - Usuário digita id da maquina que quer ser
     */
+    srand(time(NULL));
     if (argc < 2) {
         printf("Uso: %s <endpointId>\n", argv[0]);
         return 1;
