@@ -5,23 +5,25 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+
 #include "../data/Data.h"
+#include "../../../config/gameDefs.h"
 
 struct Player{
     int playerId; // mesmo do endpoint
+    bool isRoulette; // Flag indicadora de servidor
     struct Bet Bet;
     int totalReward;
 };
 
-// retorna resposta do player dependendo do evento
-// (*) Maria adicionar as demais props e mudar o nome se quiser
-// o retorno deve ser o mesmo struct do parametro !!!!
+struct Player *CreatePlayer (int playerId);
+
+// Retorna o data com a aposta do jogador
 struct Data *GeneratePlayerData (struct Data *data, struct Player *player);
 
+// Jogador recebe os premios
 bool UpdatePlayerData (struct Data *data, struct Player *player);
 
-struct Player *CreatePlayer(int playerId);
-
-void DestroiPlayer(struct Player *player);
+void DestroiPlayer (struct Player *player);
 
 #endif
