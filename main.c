@@ -21,14 +21,20 @@ int main (int argc, char *argv[]) {
         return 1;
     }
 
-    printf("====== Bem-vindo ====== \n");
-    printf("\n");
+    printf("============================ \n");
+    printf("****************************\n");
+    printf("*\n");
+    printf("      < BEM-VINDO(A) ! > \n");
+    printf("*\n");
+    printf("*****************************\n");
+    printf("============================ \n");
     printf("[INIT] Preparando a maquina %d. Aguarde! \n", endpointId);
 
     struct Endpoint *endpoint = CreateAndPrepareEndpoint(endpointId);    
     if(!endpoint) return 0;
     
     printf("[INIT] Maquina preparada com sucesso! \n");
+    printf("============================ \n");
     LoggerEndpoint(endpoint);
 
     printf("[INIT] Iniciando jogada! Aguarde enquanto configuramos a rede...\n");

@@ -147,6 +147,10 @@ void AskUserInput(char *message, bool *control, enum ControlInputEvents inputEve
     _currentInputMaxLimit = inputMaxLimit;
 
     // da para usar writte tmb... verificar
-    printf("[ENTRY] %s \n", message);
+    printf("=================== [ENTRY] =========================== \n");
+    printf("\n");
+    printf(" < %s > \n", message);
+    printf("\n");
+    printf("======================================================= \n");
     fflush(stdout);
 }

@@ -63,7 +63,7 @@ struct Response CreatingServer(struct Network *network) {
 struct Response SendMessage(struct Message *message) {
     struct Response response = {0};
 
-    printf("connected socjet %d \n", udp_socket);
+    printf("[Socket] Connected socketID: %d \n", udp_socket);
 
     if(!message || udp_socket < 0){
         ResponseError(&response, "[ERROR]: Invalid message or socket");

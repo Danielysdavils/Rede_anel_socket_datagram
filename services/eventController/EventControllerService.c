@@ -11,6 +11,7 @@
 #include "../../entities/network/message/Message.h"
 #include "../../entities/game/server/Server.h"
 #include "../../entities/game/data/Data.h"
+#include "../../entities/game/bet/Bet.h"
 #include "../../entities/network/transfer/Transfer.h"
 
 
@@ -73,14 +74,19 @@ bool RunEventController (struct Endpoint *endpoint) {
     }
     
     if(endpoint->IsServer){
+        printf("============================================== \n");
         printf("[RUN] Parabéns! você será server nessa jogada! \n");
+        printf("============================================== \n");
         // pergunta só uma vez antes de iniciar o poll para começar de fato a jogada
         // depois pergunta novamente só se tiver transferencia de player->servidor
-        AskUserInput("[Entry] Quantas rodadas deseja realizar?", &ctr->IsWaitingInput, SERVER_ASK_ROUNDS, MAX_ROUNDS_PER_USER);
-    
-    }else 
-        printf("[RUN] Parabéns! você será player nessa jogada! \n");
+        AskUserInput("Quantas rodadas deseja realizar?", &ctr->IsWaitingInput, SERVER_ASK_ROUNDS, MAX_ROUNDS_PER_USER);
 
+    }else{
+        printf("============================================== \n");
+        printf("[RUN] Parabéns! você será player nessa jogada! \n");
+        printf("============================================== \n");
+    }
+        
     // inicializo os dois, porém os preencho na hora de receber uma mensagem.
     struct Player *player = NULL;
     struct PlayerServer *server = NULL;
@@ -265,7 +271,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                     }
                     // nao sou dono da mensagem sou player, não há transição
                     else if(message->OwnerId != endpoint->Id && !endpoint->IsServer){
-                        printf("[RUN]: PLAYER - NAO SOU DONO, NAO HA TRANSICAO \n");
+                        //printf("[RUN]: PLAYER - NAO SOU DONO, NAO HA TRANSICAO \n");
                         if(!player) player = CreatePlayer(endpoint->Id);
 
                         // sou player, desestruturo msm
@@ -322,16 +328,46 @@ bool RunEventController (struct Endpoint *endpoint) {
                                 break;  
                             
                             } case BET : {
-                                printf("[RUN] PLAYER - BET \n");
+                                printf("[RUN] PLAYER BET \n");
+                                printf("=========================== \n");
+                                printf("*\n");
+                                printf(" >> Apostas disponíveis: \n");
+                                printf("\n");
+                                for(int i = 0; i < MAX_BET_TYPE; i++){
+                                    printf("[%d]: %s \n", i, GetBetType(i));
+                                }
+                                printf("\n");
+                                printf(">> Seu saldo disponível: %d", player->totalReward);
+                                printf("\n");
                                 // salvo message que irei usar quadno user retornar resposta
                                 _temporaryMessage = message;
                                 // peço dados
-                                AskUserInput("[ENTRY] Qual o tipo de aposta \n", &ctr->IsWaitingInput, PLAYER_ASK_BET_TYPE, MAX_BET_TYPE);
+                                AskUserInput("Qual o tipo de aposta?", &ctr->IsWaitingInput, PLAYER_ASK_BET_TYPE, MAX_BET_TYPE);
                                 // mando mensagem no controle de respostas
                                 break;
 
                             } case RESULT: {
                                 printf("[RUN] PLAYER - RESULT \n");
+
+                                struct BetDto playerBet = {0};
+                                for (int i = 0; i < TOTAL_ENDPOINTS; i++)
+                                {
+                                    if(message->Data->Bets[i].PlayerId == player->playerId)
+                                        playerBet = message->Data->Bets[i];
+                                }
+                            
+                                printf("======================== \n");
+                                printf("\n");
+                                printf(" >> Resultados: \n");
+                                printf("\n");
+                                printf(" [º] Seu saldo anterior: %d \n", player->totalReward);
+                                printf(" [º] Voce ganhou: %d \n", playerBet.Bet.tokens);
+                                printf(" [º] Na aposta no tipo: %s \n", GetBetType(playerBet.Bet.type));
+                                if(playerBet.Bet.type == 1)
+                                    printf(" [º] No numero: %d \n", playerBet.Bet.betTip);
+                                printf("\n");
+                                printf("======================== \n");
+
                                 // resultado não gera data novo, só atualiza dados do player
                                 bool result = UpdatePlayerData(message->Data, player);
                                 if(!result){
@@ -458,8 +494,8 @@ bool RunEventController (struct Endpoint *endpoint) {
                         // atualizo meus dados locais - mensagem já chega atualizada
                         ctr->CurrentEvent = message->Data->Event;
                         ctr->currentRound = message->Data->Round;
-                            
-                        AskUserInput("[Entry] Quantas rodadas deseja realizar? \n", &ctr->IsWaitingInput, SERVER_ASK_ROUNDS, MAX_ROUNDS_PER_USER);
+                        
+                        AskUserInput("Quantas rodadas deseja realizar? \n", &ctr->IsWaitingInput, SERVER_ASK_ROUNDS, MAX_ROUNDS_PER_USER);
                         // manda mensagem no controle de respostas
                         // uma nova mensagem é criada, então destruo a anterior
                         DestroiMessage(message);
@@ -551,28 +587,28 @@ bool RunEventController (struct Endpoint *endpoint) {
                         break;
                     
                     } case PLAYER_ASK_BET_TYPE: {
-                        printf("[RUN]: PLAYER - ASK BET TYPE \n");
+                        printf("[RUN] PLAYER_ASK_BET_TYPE \n");
                         // tipo da aposta
                         player->Bet.type = response.data;
                         if (player->Bet.type == 1){ 
-                            AskUserInput("[RUN] Qual numero (0 a 36)? \n", &ctr->IsWaitingInput, PLAYER_ASK_BET_TIP, 36);
+                            AskUserInput("Qual numero (0 a 36)?", &ctr->IsWaitingInput, PLAYER_ASK_BET_TIP, 36);
                         } else {
-                            AskUserInput("[RUN] Quantas fichas vocẽ quer aposta? \n", &ctr->IsWaitingInput, PLAYER_ASK_BET_TOKENS, MAX_BET_VALUE);
+                            AskUserInput("Quantas fichas vocẽ quer apostar?", &ctr->IsWaitingInput, PLAYER_ASK_BET_TOKENS, MAX_BET_VALUE);
                         }
                         break;
 
                     } case PLAYER_ASK_BET_TIP: {
-                        printf("[RUN]: PLAYER - ASK BET TIP \n");
+                        printf("[RUN] PLAYER_ASK_BET_TIP \n");
                         // tipo da aposta numero
                         player->Bet.betTip = response.data;
-                        AskUserInput("[RUN] Quantas fichas vocẽ quer aposta? \n", &ctr->IsWaitingInput, PLAYER_ASK_BET_TOKENS, MAX_BET_VALUE);
+                        AskUserInput("Quantas fichas vocẽ quer aposta?", &ctr->IsWaitingInput, PLAYER_ASK_BET_TOKENS, MAX_BET_VALUE);
                         break;
 
                     } case PLAYER_ASK_BET_TOKENS: {
-                        printf("[RUN]: PLAYER - ASK BET VALUE \n");
+                        printf("[RUN] PLAYER_ASK_BET_TOKEN \n");
                         // valor da aposta
                         player->Bet.tokens = response.data;
-                        
+
                         // gera mensagem
                         // manda bastão 
                         int retry = 0;
@@ -582,7 +618,19 @@ bool RunEventController (struct Endpoint *endpoint) {
                             break;
                         }
 
-                        printf("[RUN]: Player - DAta generated! \n");
+                        printf("======================== \n");
+                        printf("\n");
+                        printf(" >> Sua aposta: \n");
+                        printf("[º] Tipo: %s \n", GetBetType(player->Bet.type));
+                        if(player->Bet.type == 1)
+                            printf("[º] Numero: %d \n", player->Bet.betTip);
+                        printf("[º] Fichas: %d \n", player->Bet.tokens);
+                        printf("\n");
+                        printf("[º] Saldo restante: %d", player->totalReward);
+                        printf("\n");
+                        printf("======================== \n");
+
+                        printf("[RUN]: Player - Data generated! \n");
                         LoggerData(data);
 
                         struct Message *msm = CreateMessage(_temporaryMessage->Id, _temporaryMessage->OwnerId, retry, endpoint, endpoint->EndpointNext, endpoint->Id, DATA, data, data->Event);

@@ -21,4 +21,6 @@ struct Bet {
     int tokens; // Fichas apostadas
 };
 
+const char *GetBetType(enum BetType type);
+
 #endif

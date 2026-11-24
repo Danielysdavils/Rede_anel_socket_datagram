@@ -29,12 +29,12 @@ struct Data *GeneratePlayerData (struct Data *data, struct Player *player){
         case BET: {
             for(int i = 0; i < TOTAL_ENDPOINTS; i++){
                 if(data->Bets[i].PlayerId == player->playerId){
-                  data->Bets[i].Bet.type = player->Bet.type;
-                  data->Bets[i].Bet.betTip = player->Bet.betTip;
-                  data->Bets[i].Bet.tokens = player->Bet.tokens;
+                    data->Bets[i].Bet.type = player->Bet.type;
+                    data->Bets[i].Bet.betTip = player->Bet.betTip;
+                    data->Bets[i].Bet.tokens = player->Bet.tokens;
 
-                  player->totalReward -= player->Bet.tokens;
-                  break;
+                    player->totalReward -= player->Bet.tokens;
+                    break;
                 }
             }
             break;

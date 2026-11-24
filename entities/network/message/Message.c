@@ -15,11 +15,12 @@
 bool EncodeBet(struct Bet bet, struct Buffer *writer){
     if(writer == NULL) return false;
 
-    if(bet.type < NONE || bet.type > ODD || bet.tokens < 0) return false;
+    if(bet.type < NONE || bet.type > ODD || bet.tokens < 0 || bet.betTip < 0 || bet.betTip > 36) return false;
 
     if(!Can(writer, BYTE_BET)) return false;
 
     if(!WriteU8(writer, (uint8_t)bet.type)) return false;
+    if(!WriteU8(writer, (uint8_t)bet.betTip)) return false;
     if(!WriteU32(writer, (uint32_t)bet.tokens)) return false;
     
     return true;
@@ -32,15 +33,18 @@ bool DecodeBet(struct Buffer *buffer, struct Bet *bet){
 
     // var temp para fazer a conversão seg
     uint8_t type;
+    uint8_t tip;
     uint32_t value;
 
     if(!ReaderU8(buffer, &type)) return false;
+    if(!ReaderU8(buffer, &tip)) return false;
     if(!ReaderU32(buffer, &value)) return false;
 
-    if(type < NONE || type > ODD || value > INT32_MAX)
+    if(type > ODD || value > INT32_MAX)
         return false;
 
     bet->type = (enum BetType)type;
+    bet->betTip = (int)tip;
     bet->tokens = (int)value;
 
     return true;
@@ -552,17 +556,19 @@ void DestroiMessage (struct Message *message){
 
 
 void LogMessage(struct Message *msm){
+    printf("============================================== \n");
     printf("[LOGGER] MessageId: %s\n", msm->Id);
-    printf("[LOGGER] MessageRetry: %d\n", msm->Retry);
+    //printf("[LOGGER] MessageRetry: %d\n", msm->Retry);
     printf("[LOGGER] MessageDestination Id: %d\n", msm->DestinationId);
     printf("[LOGGER] MessageOrigin Id: %d\n", msm->OriginId);
-    printf("[LOGGER] MessageOwner: %d\n", msm->OwnerId);
+    //printf("[LOGGER] MessageOwner: %d\n", msm->OwnerId);
     //printf("[LOGGER] MessageTransfer Id: %s\n", msm->Transfer->TransferId);
     //printf("[LOGGER] MessageTransfer State: %d\n", msm->Transfer->Status);
     //printf("[LOGGER] MessageTransfer Destination Id: %d\n", msm->Transfer->DestinationEndpointId);
     //printf("[LOGGER] MessageTransfer Origin Id: %d \n", msm->Transfer->OriginEndpointId);
     //printf("[LOGGER] MessageTransfer PathVersion: %d \n", msm->Transfer->PathVersion);
     printf("[LOGGER] MessageControl Id: %s \n", msm->Control->ControlId);
-    printf("[LOGGER] MessageControl State: %d \n", msm->Control->State);
+    //printf("[LOGGER] MessageControl State: %d \n", msm->Control->State);
+    printf("============================================== \n");
 }
 

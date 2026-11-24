@@ -1,7 +1,7 @@
 #ifndef __MESSAGEDEFS__
 #define __MESSAGEDEFS__
 
-#define BYTE_BET 5
+#define BYTE_BET 6
 
 #define BYTE_BETDTO 6
 
