@@ -3,6 +3,8 @@
 
 #define BYTE_BET 6
 
+#define BYTE_BET_RESULT 3
+
 #define BYTE_BETDTO 6
 
 #define BYTE_ENDPOINTDTO 4

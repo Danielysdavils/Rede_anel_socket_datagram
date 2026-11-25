@@ -52,13 +52,14 @@ bool UpdatePlayerData (struct Data *data, struct Player *player){
     } 
 
     switch (data->Event){
-        case RESULT: 
+        case RESULT: {
             for(int i = 0; i < TOTAL_ENDPOINTS; i++){
                 if(data->Reward[i].PlayerId == player->playerId){
                     player->totalReward += data->Reward[i].Bet.tokens;
                 }
-                break;
             }
+            break;
+        }
                 
         default:
             break;

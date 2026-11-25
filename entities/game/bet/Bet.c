@@ -12,3 +12,22 @@ const char *GetBetType(enum BetType type){
         default: return "Nenhum";
     }
 }
+
+const char *GetBetResultColor(enum ResultColor color){
+    switch (color)
+    {
+        case RESULT_BLACK: return "Preto";
+        case RESULT_RED: return "Vermelho";
+        case RESULT_WHITE: return "Branco";
+        default: return "Nenhum";
+    }
+}
+
+const char *GetBetResultPariety(enum ResultPariety pariety){
+    switch (pariety)
+    {
+        case RESULT_EVEN: return "Par";
+        case RESULT_ODD: return "Impar";
+        default: return "Nenhum";
+    }
+}

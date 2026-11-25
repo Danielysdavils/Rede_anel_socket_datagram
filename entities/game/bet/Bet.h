@@ -15,6 +15,23 @@ enum BetType {
     ODD
 };
 
+enum ResultColor {
+    RESULT_BLACK,
+    RESULT_RED,
+    RESULT_WHITE
+};
+
+enum ResultPariety {
+    RESULT_EVEN,
+    RESULT_ODD
+};
+
+struct BetResult {
+    int Tip; // até 36
+    enum ResultColor Color;
+    enum ResultPariety Pariety;
+};
+
 struct Bet {
     enum BetType type; // tipo de aposta
     int betTip; // Numero da aposta
@@ -22,5 +39,9 @@ struct Bet {
 };
 
 const char *GetBetType(enum BetType type);
+
+const char *GetBetResultColor(enum ResultColor color);
+
+const char *GetBetResultPariety(enum ResultPariety pariety);
 
 #endif

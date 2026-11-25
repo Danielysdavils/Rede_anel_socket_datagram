@@ -20,7 +20,7 @@ void StopConnection() {
 }
 
 struct Response CreatingServer(struct Network *network) {
-    printf("[RUN]: Creating server socket \n");
+    if(ACTIVE_LOGS) printf("[RUN]: Creating server socket \n");
     struct Response response;
 
     if(udp_socket >= 0){
@@ -63,7 +63,7 @@ struct Response CreatingServer(struct Network *network) {
 struct Response SendMessage(struct Message *message) {
     struct Response response = {0};
 
-    printf("[Socket] Connected socketID: %d \n", udp_socket);
+    if(ACTIVE_LOGS) printf("[Socket] Connected socketID: %d \n", udp_socket);
 
     if(!message || udp_socket < 0){
         ResponseError(&response, "[ERROR]: Invalid message or socket");
@@ -93,7 +93,7 @@ struct Response SendMessage(struct Message *message) {
         return response;
     }
 
-    printf("[SOCKET] Message to SEND size: %zu / %d bytes\n", len, TAM_BUFFER);
+    if(ACTIVE_LOGS) printf("[SOCKET] Message to SEND size: %zu / %d bytes\n", len, TAM_BUFFER);
 
     ssize_t sent = sendto(
         udp_socket,
@@ -114,7 +114,7 @@ struct Response SendMessage(struct Message *message) {
         return response;
     }
 
-    if ((size_t)sent != len) {
+    if (sent != len) {
         ResponseError(&response, "[ERROR]: Datagram not fully sent");
         return response;
     }
@@ -148,7 +148,7 @@ struct Response ReceiveMessage() {
     if(received < 0){
         if(errno == EAGAIN || errno == EWOULDBLOCK){
             // nao ha dadtagrama disponíveis
-            printf("[SOCKET]: ANY DATAGRAM \n");
+            if(ACTIVE_LOGS) printf("[SOCKET]: ANY DATAGRAM \n");
             ResponseAccertData(&response, NULL, CODE_ANY_DATA);
             return response;
         }
@@ -162,7 +162,7 @@ struct Response ReceiveMessage() {
         return response;
     }
 
-    printf("[SOCKET] Message RECEIVED size: %zu / %d bytes\n", (size_t)received, TAM_BUFFER);
+    if(ACTIVE_LOGS) printf("[SOCKET] Message RECEIVED size: %zu / %d bytes\n", (size_t)received, TAM_BUFFER);
 
     struct Message *data = DecodeMessage(buffer, (size_t)received);
     if(data == NULL){

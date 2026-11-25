@@ -38,6 +38,9 @@ struct Data
     // array de player de premios {idPlayer, valor premio}
     // aqueles que perderam tem premio = 0
     struct BetDto Reward[TOTAL_ENDPOINTS];
+
+    // especifico para divulgar resultado da aposta - só servidor preenche
+    struct BetResult Result;
 };
 
 // preencher bets automaticamente com valor 0 a partir dos ids das maquinas no networkDefs

@@ -53,13 +53,13 @@ void LoggerData (struct Data *data){
     //printf("[LOGGER]: Data MaxRound %d \n", data->MaxRound);
     printf("[LOGGER]: Data Event %d \n", data->Event);
     
-    /*for(int i = 0; i < TOTAL_ENDPOINTS; i++){
+    for(int i = 0; i < TOTAL_ENDPOINTS; i++){
         printf("[LOGGER]: Data Bets [%d] = {playerID: %d, BetType: %d, BetTip: %d, BetTokens: %d}\n", i, data->Bets[i].PlayerId, data->Bets[i].Bet.type, data->Bets[i].Bet.betTip, data->Bets[i].Bet.tokens);
-    } */
+    } 
     
-    /*for(int i = 0; i < TOTAL_ENDPOINTS; i++){
-        printf("[LOGGER]: Data Rewards [%d] = {playerID: %d, BetType: %d, BetTip: %d, BetTokens: %d}\n", i, data->Reward[i].PlayerId, data->Reward[i].Bet.type, data->Bets[i].Bet.betTip, data->Reward[i].Bet.tokens);
-    } */
+    for(int i = 0; i < TOTAL_ENDPOINTS; i++){
+        printf("[LOGGER]: Data Rewards [%d] = {playerID: %d, BetType: %d, BetTip: %d, BetTokens: %d}\n", i, data->Reward[i].PlayerId, data->Reward[i].Bet.type, data->Reward[i].Bet.betTip, data->Reward[i].Bet.tokens);
+    }
     printf("============================================== \n");
 }
 

@@ -80,6 +80,44 @@ bool DecodeBetDto(struct Buffer *buffer, struct BetDto *betDto){
     return true;
 }
 
+bool EncodeBetResult(struct BetResult result, struct Buffer *writer){
+    if(writer == NULL) return false;
+
+    if(result.Color < 0 || result.Color > 2) return false;
+    if(result.Pariety < 0 || result.Pariety > 1) return false;
+    if(result.Tip < 0 || result.Tip > MAX_TIPS) return false;
+
+    if(!Can(writer, BYTE_BET_RESULT)) return false;
+
+    if(!WriteU8(writer, (uint8_t)result.Tip)) return false;
+    if(!WriteU8(writer, (uint8_t)result.Color)) return false;
+    if(!WriteU8(writer, (uint8_t)result.Pariety)) return false;
+
+    return true;
+}
+
+bool DecodeBetResult(struct Buffer *buffer, struct BetResult *result){
+    if(!result) return false;
+
+    if(!Can(buffer, BYTE_BET_RESULT)) return false;
+
+    uint8_t tip;
+    uint8_t color;
+    uint8_t pariety;
+
+    if(!ReaderU8(buffer, &tip)) return false;
+    if(!ReaderU8(buffer, &color)) return false;
+    if(!ReaderU8(buffer, &pariety)) return false;
+
+    if(color > 2 || pariety > 1 || tip > MAX_TIPS) return false;
+
+    result->Color = (enum ResultColor)color;
+    result->Pariety = (enum ResultPariety)pariety;
+    result->Tip = (int)tip;
+
+    return true;
+}
+
 // bool EncodeEndpointDto(struct EndpointDto endpointDto, struct Buffer *writer){
 //     if(writer = NULL || writer->buffer == NULL || endpointDto.Ip == NULL) return NULL;
 
@@ -280,6 +318,8 @@ bool EncodeData(struct Data *data, struct Buffer *writer){
 
     if(!EncodeDtoArray(data->Reward, writer)) return false;
 
+    if(!EncodeBetResult(data->Result, writer)) return false;
+
     return true;
 }
 
@@ -301,9 +341,13 @@ bool DecodeData(struct Buffer *buffer, struct Data *data){
 
     if(!DecodeDtoArray(buffer, data->Reward)) return false;
 
+    struct BetResult result;
+    if(!DecodeBetResult(buffer, &result)) return false;
+
     data->Round = (int)round;
     data->MaxRound = (int)maxRound;
     data->Event = (enum Event)event;
+    data->Result = result;
 
     return true;
 }   

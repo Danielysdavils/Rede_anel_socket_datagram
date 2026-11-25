@@ -6,6 +6,8 @@
 
 #define INITIAL_VALUE 12000 // Quantidade de fichas iniciais
 
+#define MAX_TIPS 36
+
 /**
  * Control input Events:
  *  -> Quando um server ou player pergunta é complexo saber a que evento essa resposta pertence
