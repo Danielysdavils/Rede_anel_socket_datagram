@@ -370,7 +370,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                                 printf("\n");
                                 printf(" >> Tipo de apostas: \n");
                                 printf("\n");
-                                for(int i = 0; i < MAX_BET_TYPE; i++){
+                                for(int i = 1; i < MAX_BET_TYPE; i++){
                                     printf("[%d]: %s \n", i, GetBetType(i));
                                 }
                                 printf("\n");
@@ -379,7 +379,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                                 // salvo message que irei usar quadno user retornar resposta
                                 _temporaryMessage = message;
                                 // peço dados
-                                AskUserInput("Qual o tipo de aposta?", &ctr->IsWaitingInput, PLAYER_ASK_BET_TYPE, MAX_BET_TYPE);
+                                AskUserInput("Qual o tipo de aposta?", &ctr->IsWaitingInput, PLAYER_ASK_BET_TYPE, MAX_BET_TYPE - 1); // -1 porque nao conto o 0 (none)
                                 printf("\n");
                                 printf("============== [APOSTA] =============== \n");
                                 // mando mensagem no controle de respostas
@@ -647,7 +647,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                         // tipo da aposta
                         player->Bet.type = response.data;
                         if (player->Bet.type == 1){ 
-                            AskUserInput("Qual numero (0 a 36)?", &ctr->IsWaitingInput, PLAYER_ASK_BET_TIP, 36);
+                            AskUserInput("Qual numero (1 a 36)?", &ctr->IsWaitingInput, PLAYER_ASK_BET_TIP, 36);
                         } else {
                             AskUserInput("Quantas fichas vocẽ quer apostar?", &ctr->IsWaitingInput, PLAYER_ASK_BET_TOKENS, MAX_BET_VALUE);
                         }

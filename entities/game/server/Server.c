@@ -42,15 +42,15 @@ struct Data *GenerateServerData (struct Data *data, struct PlayerServer *server)
             }
 
             // Apostas são realizadas
-            int numberDraw = (rand() % (MAX_TIPS + 1)); // [0 ate 36]
+            int numberDraw = (rand() % MAX_TIPS) + 1; // [1 ate 36]
             data->Result.Tip = numberDraw;
 
             if(ACTIVE_LOGS) printf("O RESULTADO DA APOSTA: \n");
 
-            if(numberDraw == 0){
-                if(ACTIVE_LOGS) printf("NUMERO: 0 - ZERO - BRANCO\n");
-                data->Result.Color = RESULT_WHITE;
-            } else if(numberDraw % 2 == 0){
+            // if(numberDraw == 0){
+            //     if(ACTIVE_LOGS) printf("NUMERO: 0 - ZERO - BRANCO\n");
+            //     data->Result.Color = RESULT_WHITE;
+            if(numberDraw % 2 == 0){
                 if(ACTIVE_LOGS) printf("NUMERO: %d - PAR - VERMELHO\n", numberDraw);
                 data->Result.Pariety = RESULT_EVEN;
                 data->Result.Color = RESULT_RED;
@@ -67,7 +67,7 @@ struct Data *GenerateServerData (struct Data *data, struct PlayerServer *server)
                     switch (data->Bets[i].Bet.type){
                         case NONE: 
                             break;
-
+                            
                         case NUMBER:
                             if(numberDraw == data->Bets[i].Bet.betTip){
                                 reward = data->Bets[i].Bet.tokens * 36; 
@@ -130,8 +130,7 @@ struct Data *GenerateServerData (struct Data *data, struct PlayerServer *server)
             
             break;
         }
-        default:
-            break;
+        default: break;
     }
     return data;
 } 

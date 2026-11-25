@@ -7,10 +7,11 @@
     Todas as máquinas vão seguir as mesmas especificações 
     contidas neste arquivo
 */
+#include <stdbool.h>
 
 // deixe em 1 se quiser inicialização com logs ativos
 // deixe em 0 se quiser só mensagens do jogo
-#define ACTIVE_LOGS 0
+#define ACTIVE_LOGS false
 
 // total de maquinas a receber/enviar mensagens
 #define TOTAL_ENDPOINTS 4

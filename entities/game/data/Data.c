@@ -22,7 +22,7 @@ struct Data *CreateData (int round, int maxRound, enum Event event){
 }
 
 /* Exclusivo para Decode de mensagens */
-struct Data *CreateCompleteData (int round, int maxRound, enum Event event, struct BetDto bets[TOTAL_ENDPOINTS], struct BetDto rewards[TOTAL_ENDPOINTS]) {
+struct Data *CreateCompleteData (int round, int maxRound, enum Event event, struct BetDto bets[TOTAL_ENDPOINTS], struct BetDto rewards[TOTAL_ENDPOINTS], struct BetResult result) {
     if(!bets || !rewards){
       return NULL;
     } 
@@ -40,6 +40,8 @@ struct Data *CreateCompleteData (int round, int maxRound, enum Event event, stru
     memcpy(data->Bets, bets, sizeof(data->Bets));
     memcpy(data->Reward, rewards, sizeof(data->Reward));
 
+    data->Result = result;
+
     return data;
 }
 
@@ -53,13 +55,18 @@ void LoggerData (struct Data *data){
     //printf("[LOGGER]: Data MaxRound %d \n", data->MaxRound);
     printf("[LOGGER]: Data Event %d \n", data->Event);
     
-    for(int i = 0; i < TOTAL_ENDPOINTS; i++){
-        printf("[LOGGER]: Data Bets [%d] = {playerID: %d, BetType: %d, BetTip: %d, BetTokens: %d}\n", i, data->Bets[i].PlayerId, data->Bets[i].Bet.type, data->Bets[i].Bet.betTip, data->Bets[i].Bet.tokens);
-    } 
+    //for(int i = 0; i < TOTAL_ENDPOINTS; i++){
+    //    printf("[LOGGER]: Data Bets [%d] = {playerID: %d, BetType: %d, BetTip: %d, BetTokens: %d}\n", i, data->Bets[i].PlayerId, data->Bets[i].Bet.type, data->Bets[i].Bet.betTip, data->Bets[i].Bet.tokens);
+    //} 
     
-    for(int i = 0; i < TOTAL_ENDPOINTS; i++){
-        printf("[LOGGER]: Data Rewards [%d] = {playerID: %d, BetType: %d, BetTip: %d, BetTokens: %d}\n", i, data->Reward[i].PlayerId, data->Reward[i].Bet.type, data->Reward[i].Bet.betTip, data->Reward[i].Bet.tokens);
-    }
+    //for(int i = 0; i < TOTAL_ENDPOINTS; i++){
+    //    printf("[LOGGER]: Data Rewards [%d] = {playerID: %d, BetType: %d, BetTip: %d, BetTokens: %d}\n", i, data->Reward[i].PlayerId, data->Reward[i].Bet.type, data->Reward[i].Bet.betTip, data->Reward[i].Bet.tokens);
+    //}
+
+    printf("[LOGGER]: Data Result Tip %d \n", data->Result.Tip);
+    printf("[LOGGER]: Data Result Color %s \n", GetBetResultColor(data->Result.Color));
+    printf("[LOGGER]: Data Result Parity %s \n", GetBetResultPariety(data->Result.Pariety));
+    printf("\n");
     printf("============================================== \n");
 }
 

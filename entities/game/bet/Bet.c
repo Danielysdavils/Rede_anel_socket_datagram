@@ -18,7 +18,6 @@ const char *GetBetResultColor(enum ResultColor color){
     {
         case RESULT_BLACK: return "Preto";
         case RESULT_RED: return "Vermelho";
-        case RESULT_WHITE: return "Branco";
         default: return "Nenhum";
     }
 }

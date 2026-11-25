@@ -46,7 +46,7 @@ struct Data
 // preencher bets automaticamente com valor 0 a partir dos ids das maquinas no networkDefs
 struct Data *CreateData (int round, int maxRound, enum Event event);
 
-struct Data *CreateCompleteData (int round, int maxRound, enum Event event, struct BetDto Bets[TOTAL_ENDPOINTS], struct BetDto Rewards[TOTAL_ENDPOINTS]);
+struct Data *CreateCompleteData (int round, int maxRound, enum Event event, struct BetDto Bets[TOTAL_ENDPOINTS], struct BetDto Rewards[TOTAL_ENDPOINTS], struct BetResult result);
 
 void LoggerData (struct Data *data);
 

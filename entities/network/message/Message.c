@@ -83,7 +83,7 @@ bool DecodeBetDto(struct Buffer *buffer, struct BetDto *betDto){
 bool EncodeBetResult(struct BetResult result, struct Buffer *writer){
     if(writer == NULL) return false;
 
-    if(result.Color < 0 || result.Color > 2) return false;
+    if(result.Color < 0 || result.Color > 1) return false;
     if(result.Pariety < 0 || result.Pariety > 1) return false;
     if(result.Tip < 0 || result.Tip > MAX_TIPS) return false;
 
@@ -109,7 +109,7 @@ bool DecodeBetResult(struct Buffer *buffer, struct BetResult *result){
     if(!ReaderU8(buffer, &color)) return false;
     if(!ReaderU8(buffer, &pariety)) return false;
 
-    if(color > 2 || pariety > 1 || tip > MAX_TIPS) return false;
+    if(color > 1 || pariety > 1 || tip > MAX_TIPS) return false;
 
     result->Color = (enum ResultColor)color;
     result->Pariety = (enum ResultPariety)pariety;
@@ -521,7 +521,7 @@ struct Message *CreateDecodeMessage (char *messageId, int messageRetry, enum Mes
 
     // copia data
     if(data){
-        message->Data = CreateCompleteData(data->Round, data->MaxRound, data->Event, data->Bets, data->Reward);
+        message->Data = CreateCompleteData(data->Round, data->MaxRound, data->Event, data->Bets, data->Reward, data->Result);
         if(!message->Data) goto error;
     }
 
@@ -561,7 +561,7 @@ struct Message *CreateMessage (char *messageId, int messageOwner, int retry, str
     if(!message->Transfer) goto error;
 
     if(data){
-        message->Data = CreateCompleteData(data->Round, data->MaxRound, data->Event, data->Bets, data->Reward);
+        message->Data = CreateCompleteData(data->Round, data->MaxRound, data->Event, data->Bets, data->Reward, data->Result);
         if(!message->Data) goto error;
     }
 
