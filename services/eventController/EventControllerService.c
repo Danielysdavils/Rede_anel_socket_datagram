@@ -368,6 +368,8 @@ bool RunEventController (struct Endpoint *endpoint) {
                                 printf("\n");
                                 printf("  ($) Chegou a hora de apostar!\n");
                                 printf("\n");
+                                printf("  [º] Valor máximo permitido para apostar: %d \n", MAX_BET_VALUE);
+                                printf("\n");
                                 printf(" >> Tipo de apostas: \n");
                                 printf("\n");
                                 for(int i = 1; i < MAX_BET_TYPE; i++){
@@ -647,7 +649,7 @@ bool RunEventController (struct Endpoint *endpoint) {
                         // tipo da aposta
                         player->Bet.type = response.data;
                         if (player->Bet.type == 1){ 
-                            AskUserInput("Qual numero (1 a 36)?", &ctr->IsWaitingInput, PLAYER_ASK_BET_TIP, 36);
+                            AskUserInput("Qual numero (1 a 36)?", &ctr->IsWaitingInput, PLAYER_ASK_BET_TIP, MAX_TIPS);
                         } else {
                             AskUserInput("Quantas fichas vocẽ quer apostar?", &ctr->IsWaitingInput, PLAYER_ASK_BET_TOKENS, MAX_BET_VALUE);
                         }

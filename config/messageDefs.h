@@ -5,7 +5,7 @@
 
 #define BYTE_BET_RESULT 3
 
-#define BYTE_BETDTO 6
+#define BYTE_BETDTO 7
 
 #define BYTE_ENDPOINTDTO 4
 
