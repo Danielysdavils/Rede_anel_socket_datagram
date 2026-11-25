@@ -10,8 +10,8 @@ A cada rodada, a máquina com o bastão vira a roleta e os outros 3 viram jogado
     A roleta anuncia o início do jogo enviando a mensagem inicial.
 
 - Fase de Apostas:
-    Cada jogador deve apostar um valor entre 10 e 100 fichas e escolher o modo de jogo:
-    -- Número exato x (0 a 36): Se acertar, ganha x vezes o valor apostado.
+    Cada jogador deve apostar um valor entre 1 e 100 fichas e escolher o modo de jogo:
+    -- Número exato x (1 a 36): Se acertar, ganha x vezes o valor apostado.
     -- Cor (Preto ou Vermelho): Se acertar, ganha o quádruplo do valor apostado.
     -- Par ou Ímpar: Se acertar, ganha o dobro do valor apostado. 
 
